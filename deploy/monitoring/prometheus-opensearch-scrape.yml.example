@@ -1,0 +1,16 @@
+scrape_configs:
+  - job_name: mageos-opensearch-hybrid-opensearch
+    scrape_interval: 15s
+    scrape_timeout: 10s
+    metrics_path: /_prometheus/metrics
+    scheme: https
+    follow_redirects: false
+    basic_auth:
+      username: mageos_hybrid_monitor
+      password_file: /run/secrets/opensearch_metrics_password
+    tls_config:
+      ca_file: /run/secrets/opensearch_metrics_ca.pem
+      min_version: TLS12
+    static_configs:
+      - targets:
+          - 127.0.0.1:9200

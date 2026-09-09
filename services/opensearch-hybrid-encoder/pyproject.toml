@@ -1,0 +1,43 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "mageos-opensearch-hybrid-encoder"
+version = "0.2.0.dev0"
+description = "Identity-sealed ONNX encoder companion for Mage-OS OpenSearch Hybrid"
+requires-python = ">=3.13"
+dependencies = []
+
+[project.optional-dependencies]
+production = [
+    "numpy==2.5.2",
+    "onnxruntime==1.28.0",
+    "tokenizers==0.22.2",
+]
+
+[project.scripts]
+mageos-opensearch-hybrid-encoder = "mageos_opensearch_hybrid_encoder.server:main"
+mageos-opensearch-hybrid-release = "mageos_opensearch_hybrid_encoder.release:main"
+mageos-opensearch-hybrid-seal-identity = "mageos_opensearch_hybrid_encoder.identity:main"
+mageos-opensearch-hybrid-qualify = "mageos_opensearch_hybrid_encoder.qualification:main"
+mageos-opensearch-hybrid-qualify-http = "mageos_opensearch_hybrid_encoder.http_qualification:main"
+mageos-opensearch-hybrid-supply-chain = "mageos_opensearch_hybrid_encoder.supply_chain:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/mageos_opensearch_hybrid_encoder"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "RUF"]
+
+[tool.mypy]
+python_version = "3.13"
+strict = true
+files = ["src", "tests"]

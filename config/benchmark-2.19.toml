@@ -1,0 +1,40 @@
+schema_version = 2
+profile_id = "opensearch-2.19-local-8cpu-16g"
+requires_live_verification = true
+cpu_limit = 8
+memory_limit_bytes = 17179869184
+compose_project = "opensearch-hybrid-os219"
+compose_service = "opensearch"
+compose_files = ["compose.opensearch-2.19.yml"]
+container_image = "opensearchproject/opensearch:2.19.6"
+container_image_id = "sha256:8690b204fe914c60ca76d451ac73bc0481e034d32d3779944c8caca56a2b003f"
+opensearch_url = "http://127.0.0.1:9219"
+opensearch_version = "2.19.6"
+plugin_version = "2.19.6.0"
+plugin_components = [
+  "opensearch-alerting",
+  "opensearch-anomaly-detection",
+  "opensearch-asynchronous-search",
+  "opensearch-cross-cluster-replication",
+  "opensearch-custom-codecs",
+  "opensearch-flow-framework",
+  "opensearch-geospatial",
+  "opensearch-index-management",
+  "opensearch-job-scheduler",
+  "opensearch-knn",
+  "opensearch-ltr",
+  "opensearch-ml",
+  "opensearch-neural-search",
+  "opensearch-notifications",
+  "opensearch-notifications-core",
+  "opensearch-observability",
+  "opensearch-performance-analyzer",
+  "opensearch-reports-scheduler",
+  "opensearch-security",
+  "opensearch-security-analytics",
+  "opensearch-skills",
+  "opensearch-sql",
+  "opensearch-system-templates",
+  "query-insights",
+]
+latency_required_architecture = "x86_64"

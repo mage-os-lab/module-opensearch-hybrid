@@ -1,0 +1,22 @@
+schema_version = 1
+
+# Decision-table query encodes run through this exact CPU path. The architecture target is
+# explicit because Sentence Transformers selects different dynamic-int8 operator configurations.
+backend = "sentence_transformers_onnx"
+precision = "int8_dynamic"
+execution_provider = "CPUExecutionProvider"
+quantization_config = "arm64"
+intra_op_num_threads = 1
+inter_op_num_threads = 1
+execution_mode = "ORT_SEQUENTIAL"
+batch_size = 1
+
+# Registered before measuring the production-query artifacts.
+parity_sample_size = 480
+minimum_query_cosine_similarity = 0.99
+minimum_mean_query_cosine_similarity = 0.999
+maximum_absolute_query_delta = 0.05
+document_drift_sample_size = 256
+minimum_document_drift_cosine_similarity = 0.9999
+self_retrieval_sample_size = 1000
+minimum_self_retrieval_top1 = 0.8

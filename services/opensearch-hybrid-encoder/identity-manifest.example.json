@@ -1,0 +1,63 @@
+{
+  "schema_version": 2,
+  "api_version": "v1",
+  "model": {
+    "id": "Snowflake/snowflake-arctic-embed-m-v2.0",
+    "revision": "95c2741480856aa9666782eb4afe11959938017f",
+    "dimension": 256,
+    "similarity": "cosine",
+    "normalization": "l2_after_truncation",
+    "truncate_to_dimension": 256,
+    "max_sequence_length": 512
+  },
+  "recipe": {
+    "version": "mageos-v1",
+    "query_prefix": "query: ",
+    "query_template": "{query}",
+    "document_prefix": "",
+    "document_template": "{title}. {description}. {attributes}",
+    "lexical_brand_attributes": ["manufacturer"],
+    "semantic_feature_attributes": ["color", "material"]
+  },
+  "runtime": {
+    "architecture": "linux/amd64",
+    "implementation": "mageos_onnxruntime_tokenizers_v1",
+    "execution_provider": "CPUExecutionProvider",
+    "query_precision": "fp32",
+    "document_precision": "fp32",
+    "query_batch_size": 1,
+    "max_batch_size": 64,
+    "versions": {
+      "python": "REPLACE",
+      "numpy": "REPLACE",
+      "onnxruntime": "REPLACE",
+      "tokenizers": "REPLACE"
+    }
+  },
+  "deployment": {
+    "kind": "oci_image",
+    "artifact_digest": "sha256:0000000000000000000000000000000000000000000000000000000000000000",
+    "base_artifact_digest": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+  },
+  "artifacts": {
+    "document_model": {"path": "models/model.onnx", "sha256": "0000000000000000000000000000000000000000000000000000000000000000", "size": 1},
+    "query_model": {"path": "models/model.onnx", "sha256": "0000000000000000000000000000000000000000000000000000000000000000", "size": 1},
+    "tokenizer": {"path": "REPLACE", "sha256": "0000000000000000000000000000000000000000000000000000000000000000", "size": 1},
+    "model_config": {"path": "REPLACE", "sha256": "0000000000000000000000000000000000000000000000000000000000000000", "size": 1},
+    "amd64_parity": {"path": "REPLACE", "sha256": "0000000000000000000000000000000000000000000000000000000000000000", "size": 1},
+    "quality_guard": {"path": "REPLACE", "sha256": "0000000000000000000000000000000000000000000000000000000000000000", "size": 1},
+    "self_retrieval": {"path": "REPLACE", "sha256": "0000000000000000000000000000000000000000000000000000000000000000", "size": 1},
+    "reference_vectors": {"path": "REPLACE", "sha256": "0000000000000000000000000000000000000000000000000000000000000000", "size": 1},
+    "latency_concurrency_four": {"path": "REPLACE", "sha256": "0000000000000000000000000000000000000000000000000000000000000000", "size": 1}
+  },
+  "qualification": {
+    "status": "qualified",
+    "evidence_artifact_roles": [
+      "amd64_parity",
+      "quality_guard",
+      "self_retrieval",
+      "reference_vectors",
+      "latency_concurrency_four"
+    ]
+  }
+}

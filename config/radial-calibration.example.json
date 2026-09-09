@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "split": "development",
+  "qualification_scope": "smoke",
+  "catalog_evidence_scope": "synthetic_execution",
+  "index": "replace-with-physical-generation-index",
+  "generation_id": 1,
+  "storefront_limit": 12,
+  "maximum_result_count": 20,
+  "concurrency": 4,
+  "latency_samples": 20,
+  "exact_capture_limit": 10000,
+  "identity": {
+    "model_id": "Snowflake/snowflake-arctic-embed-m-v2.0",
+    "model_revision": "95c2741480856aa9666782eb4afe11959938017f",
+    "dimension": 256,
+    "similarity": "cosine",
+    "source_recipe_version": "mageos-v1",
+    "store_id": 1,
+    "use_case": "substitute"
+  },
+  "thresholds": [
+    0.9
+  ],
+  "cases": [
+    {
+      "case_id": "replace-with-reviewed-case-id",
+      "seed_product_id": 1,
+      "slices": [
+        "replace-with-reviewed-slice"
+      ],
+      "unsafe_ids": []
+    }
+  ]
+}

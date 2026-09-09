@@ -1,0 +1,568 @@
+rule_files:
+  - prometheus-alert-rules.yml
+
+evaluation_interval: 1m
+
+tests:
+  - name: healthy durable metrics do not alert
+    interval: 1m
+    input_series:
+      - series: mageos_opensearch_hybrid_snapshot_generated_timestamp_seconds
+        values: 1200+0x20
+      - series: 'mageos_opensearch_hybrid_readiness{activation_mode="HYBRID",store_id="1"}'
+        values: 1+0x20
+      - series: 'mageos_opensearch_hybrid_work_jobs{lane="EMBEDDING",state="DEAD",store_id="1"}'
+        values: 0+0x20
+      - series: 'mageos_opensearch_hybrid_subscription_trace_unresolved_failure_total{store_id="1",subscription_id="1"}'
+        values: 0+0x20
+      - series: mageos_opensearch_hybrid_async_event_trace_retention_bounded
+        values: 1+0x20
+      - series: mageos_opensearch_hybrid_query_snapshot_generated_timestamp_seconds
+        values: 1200+0x20
+      - series: mageos_opensearch_hybrid_query_collection_enabled
+        values: 1+0x20
+      - series: mageos_opensearch_hybrid_query_window_complete
+        values: 1+0x20
+      - series: 'mageos_opensearch_hybrid_query_window_requests{request_name="quick_search_container",store_id="1"}'
+        values: 100+0x20
+      - series: 'mageos_opensearch_hybrid_query_window_fallback_ratio{request_name="quick_search_container",store_id="1"}'
+        values: 0.01+0x20
+      - series: 'mageos_opensearch_hybrid_query_window_p95_duration_milliseconds{request_name="quick_search_container",route="hybrid",store_id="1"}'
+        values: 100+0x20
+    alert_rule_test:
+      - eval_time: 20m
+        alertname: MageOSOpenSearchHybridMetricsStale
+        exp_alerts: []
+      - eval_time: 20m
+        alertname: MageOSOpenSearchHybridDurableAlert
+        exp_alerts: []
+      - eval_time: 20m
+        alertname: MageOSOpenSearchHybridActiveStoreNotReady
+        exp_alerts: []
+      - eval_time: 20m
+        alertname: MageOSOpenSearchHybridDeadWork
+        exp_alerts: []
+      - eval_time: 20m
+        alertname: MageOSOpenSearchHybridUnresolvedHandoffFailure
+        exp_alerts: []
+      - eval_time: 20m
+        alertname: MageOSOpenSearchHybridTraceRetentionUnbounded
+        exp_alerts: []
+      - eval_time: 20m
+        alertname: MageOSOpenSearchHybridQueryMetricsStale
+        exp_alerts: []
+      - eval_time: 20m
+        alertname: MageOSOpenSearchHybridQueryWindowIncomplete
+        exp_alerts: []
+      - eval_time: 20m
+        alertname: MageOSOpenSearchHybridQueryFallbackRateHigh
+        exp_alerts: []
+      - eval_time: 20m
+        alertname: MageOSOpenSearchHybridQueryLatencyHigh
+        exp_alerts: []
+
+  - name: durable failure conditions preserve their operational labels
+    interval: 1m
+    input_series:
+      - series: mageos_opensearch_hybrid_snapshot_generated_timestamp_seconds
+        values: 0+0x20
+      - series: 'mageos_opensearch_hybrid_alert{severity="high",store_id="1"}'
+        values: 1+0x20
+      - series: 'mageos_opensearch_hybrid_readiness{activation_mode="HYBRID",store_id="1"}'
+        values: 0+0x20
+      - series: 'mageos_opensearch_hybrid_work_jobs{lane="EMBEDDING",state="DEAD",store_id="1"}'
+        values: 1+0x20
+      - series: 'mageos_opensearch_hybrid_subscription_trace_unresolved_failure_total{store_id="1",subscription_id="1"}'
+        values: 1+0x20
+      - series: mageos_opensearch_hybrid_async_event_trace_retention_bounded
+        values: 0+0x20
+      - series: mageos_opensearch_hybrid_query_snapshot_generated_timestamp_seconds
+        values: 0+0x20
+      - series: mageos_opensearch_hybrid_query_collection_enabled
+        values: 1+0x20
+      - series: mageos_opensearch_hybrid_query_window_complete
+        values: 0+0x20
+      - series: 'mageos_opensearch_hybrid_query_window_requests{request_name="quick_search_container",store_id="1"}'
+        values: 100+0x20
+      - series: 'mageos_opensearch_hybrid_query_window_fallback_ratio{request_name="quick_search_container",store_id="1"}'
+        values: 0.5+0x20
+      - series: 'mageos_opensearch_hybrid_query_window_p95_duration_milliseconds{request_name="quick_search_container",route="hybrid",store_id="1"}'
+        values: 500+0x20
+    alert_rule_test:
+      - eval_time: 20m
+        alertname: MageOSOpenSearchHybridMetricsStale
+        exp_alerts:
+          - exp_labels:
+              severity: high
+            exp_annotations:
+              summary: Mage-OS OpenSearch Hybrid durable metrics are stale
+      - eval_time: 20m
+        alertname: MageOSOpenSearchHybridDurableAlert
+        exp_alerts:
+          - exp_labels:
+              severity: high
+              store_id: "1"
+            exp_annotations:
+              summary: Mage-OS OpenSearch Hybrid reports a durable high-severity condition
+      - eval_time: 20m
+        alertname: MageOSOpenSearchHybridActiveStoreNotReady
+        exp_alerts:
+          - exp_labels:
+              activation_mode: HYBRID
+              severity: critical
+              store_id: "1"
+            exp_annotations:
+              summary: An active Mage-OS OpenSearch Hybrid store is not ready
+      - eval_time: 20m
+        alertname: MageOSOpenSearchHybridDeadWork
+        exp_alerts:
+          - exp_labels:
+              lane: EMBEDDING
+              severity: high
+              state: DEAD
+              store_id: "1"
+            exp_annotations:
+              summary: Mage-OS OpenSearch Hybrid has dead work requiring explicit replay
+      - eval_time: 20m
+        alertname: MageOSOpenSearchHybridUnresolvedHandoffFailure
+        exp_alerts:
+          - exp_labels:
+              severity: high
+              store_id: "1"
+              subscription_id: "1"
+            exp_annotations:
+              summary: A Mage-OS Async Events handoff remains failed
+      - eval_time: 20m
+        alertname: MageOSOpenSearchHybridTraceRetentionUnbounded
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+            exp_annotations:
+              summary: Mage-OS Async Events trace retention is not bounded
+      - eval_time: 20m
+        alertname: MageOSOpenSearchHybridQueryMetricsStale
+        exp_alerts:
+          - exp_labels:
+              severity: high
+            exp_annotations:
+              summary: Mage-OS OpenSearch Hybrid query metrics are stale
+      - eval_time: 20m
+        alertname: MageOSOpenSearchHybridQueryWindowIncomplete
+        exp_alerts:
+          - exp_labels:
+              severity: warning
+            exp_annotations:
+              summary: Mage-OS OpenSearch Hybrid query metrics do not cover the configured window
+      - eval_time: 20m
+        alertname: MageOSOpenSearchHybridQueryFallbackRateHigh
+        exp_alerts:
+          - exp_labels:
+              request_name: quick_search_container
+              severity: high
+              store_id: "1"
+            exp_annotations:
+              summary: Mage-OS OpenSearch Hybrid query fallback rate is above five percent
+      - eval_time: 20m
+        alertname: MageOSOpenSearchHybridQueryLatencyHigh
+        exp_alerts:
+          - exp_labels:
+              request_name: quick_search_container
+              route: hybrid
+              severity: warning
+              store_id: "1"
+            exp_annotations:
+              summary: Mage-OS OpenSearch Hybrid query p95 is above 200 milliseconds
+
+  - name: healthy encoder metrics do not alert
+    interval: 1m
+    input_series:
+      - series: 'up{instance="127.0.0.1:18080",job="mageos-opensearch-hybrid-encoder"}'
+        values: 1+0x20
+      - series: 'mageos_opensearch_hybrid_encoder_identity_info{instance="127.0.0.1:18080",job="mageos-opensearch-hybrid-encoder",production_eligible="true"}'
+        values: 1+0x20
+      - series: 'mageos_opensearch_hybrid_encoder_requests_total{instance="127.0.0.1:18080",job="mageos-opensearch-hybrid-encoder",outcome="runtime_error",route="query"}'
+        values: 0+0x20
+      - series: 'mageos_opensearch_hybrid_encoder_requests_total{instance="127.0.0.1:18080",job="mageos-opensearch-hybrid-encoder",outcome="ok",route="query"}'
+        values: 100+5x20
+      - series: 'mageos_opensearch_hybrid_encoder_inflight_requests{instance="127.0.0.1:18080",job="mageos-opensearch-hybrid-encoder"}'
+        values: 1+0x20
+      - series: 'mageos_opensearch_hybrid_encoder_concurrency_limit{instance="127.0.0.1:18080",job="mageos-opensearch-hybrid-encoder"}'
+        values: 4+0x20
+    alert_rule_test:
+      - eval_time: 20m
+        alertname: MageOSOpenSearchHybridEncoderUnavailable
+        exp_alerts: []
+      - eval_time: 20m
+        alertname: MageOSOpenSearchHybridEncoderIdentityMissing
+        exp_alerts: []
+      - eval_time: 20m
+        alertname: MageOSOpenSearchHybridEncoderNotProductionEligible
+        exp_alerts: []
+      - eval_time: 20m
+        alertname: MageOSOpenSearchHybridEncoderRuntimeErrorRateHigh
+        exp_alerts: []
+      - eval_time: 20m
+        alertname: MageOSOpenSearchHybridEncoderSaturated
+        exp_alerts: []
+
+  - name: encoder failure conditions preserve their target identity
+    interval: 1m
+    input_series:
+      - series: 'up{instance="127.0.0.1:18080",job="mageos-opensearch-hybrid-encoder"}'
+        values: 0+0x20
+      - series: 'up{instance="127.0.0.1:18081",job="mageos-opensearch-hybrid-encoder"}'
+        values: 1+0x20
+      - series: 'up{instance="127.0.0.1:18082",job="mageos-opensearch-hybrid-encoder"}'
+        values: 1+0x20
+      - series: 'mageos_opensearch_hybrid_encoder_identity_info{instance="127.0.0.1:18082",job="mageos-opensearch-hybrid-encoder",production_eligible="false"}'
+        values: 1+0x20
+      - series: 'mageos_opensearch_hybrid_encoder_requests_total{instance="127.0.0.1:18082",job="mageos-opensearch-hybrid-encoder",outcome="runtime_error",route="query"}'
+        values: 0+2x20
+      - series: 'mageos_opensearch_hybrid_encoder_requests_total{instance="127.0.0.1:18082",job="mageos-opensearch-hybrid-encoder",outcome="ok",route="query"}'
+        values: 0+18x20
+      - series: 'mageos_opensearch_hybrid_encoder_inflight_requests{instance="127.0.0.1:18082",job="mageos-opensearch-hybrid-encoder"}'
+        values: 4+0x20
+      - series: 'mageos_opensearch_hybrid_encoder_concurrency_limit{instance="127.0.0.1:18082",job="mageos-opensearch-hybrid-encoder"}'
+        values: 4+0x20
+    alert_rule_test:
+      - eval_time: 20m
+        alertname: MageOSOpenSearchHybridEncoderUnavailable
+        exp_alerts:
+          - exp_labels:
+              instance: 127.0.0.1:18080
+              job: mageos-opensearch-hybrid-encoder
+              severity: high
+            exp_annotations:
+              summary: A Mage-OS OpenSearch Hybrid encoder target is unavailable
+      - eval_time: 20m
+        alertname: MageOSOpenSearchHybridEncoderIdentityMissing
+        exp_alerts:
+          - exp_labels:
+              instance: 127.0.0.1:18081
+              job: mageos-opensearch-hybrid-encoder
+              severity: high
+            exp_annotations:
+              summary: A Mage-OS OpenSearch Hybrid encoder target has no unique identity metric
+      - eval_time: 20m
+        alertname: MageOSOpenSearchHybridEncoderNotProductionEligible
+        exp_alerts:
+          - exp_labels:
+              instance: 127.0.0.1:18082
+              job: mageos-opensearch-hybrid-encoder
+              production_eligible: "false"
+              severity: critical
+            exp_annotations:
+              summary: A Mage-OS OpenSearch Hybrid encoder target is not production eligible
+      - eval_time: 20m
+        alertname: MageOSOpenSearchHybridEncoderRuntimeErrorRateHigh
+        exp_alerts:
+          - exp_labels:
+              instance: 127.0.0.1:18082
+              job: mageos-opensearch-hybrid-encoder
+              route: query
+              severity: high
+            exp_annotations:
+              summary: Mage-OS OpenSearch Hybrid encoder runtime errors exceed one percent
+      - eval_time: 20m
+        alertname: MageOSOpenSearchHybridEncoderSaturated
+        exp_alerts:
+          - exp_labels:
+              instance: 127.0.0.1:18082
+              job: mageos-opensearch-hybrid-encoder
+              severity: warning
+            exp_annotations:
+              summary: A Mage-OS OpenSearch Hybrid encoder target is persistently saturated
+
+  - name: healthy opensearch metrics do not alert
+    interval: 1m
+    input_series:
+      - series: 'up{instance="127.0.0.1:9200",job="mageos-opensearch-hybrid-opensearch"}'
+        values: 1+0x20
+      - series: 'opensearch_cluster_status{cluster="catalog",instance="127.0.0.1:9200",job="mageos-opensearch-hybrid-opensearch"}'
+        values: 0+0x20
+      - series: 'opensearch_jvm_mem_heap_used_percent{cluster="catalog",instance="127.0.0.1:9200",job="mageos-opensearch-hybrid-opensearch",node="catalog-1"}'
+        values: 50+0x20
+      - series: 'opensearch_fs_path_available_bytes{cluster="catalog",instance="127.0.0.1:9200",job="mageos-opensearch-hybrid-opensearch",node="catalog-1",path="/data"}'
+        values: 60+0x20
+      - series: 'opensearch_fs_path_total_bytes{cluster="catalog",instance="127.0.0.1:9200",job="mageos-opensearch-hybrid-opensearch",node="catalog-1",path="/data"}'
+        values: 100+0x20
+      - series: 'opensearch_circuitbreaker_tripped_count{cluster="catalog",instance="127.0.0.1:9200",job="mageos-opensearch-hybrid-opensearch",name="parent",node="catalog-1"}'
+        values: 0+0x20
+      - series: 'opensearch_cluster_routing_allocation_enabled{cluster="catalog",instance="127.0.0.1:9200",job="mageos-opensearch-hybrid-opensearch"}'
+        values: 0+0x20
+    alert_rule_test:
+      - eval_time: 20m
+        alertname: MageOSOpenSearchHybridOpenSearchUnavailable
+        exp_alerts: []
+      - eval_time: 20m
+        alertname: MageOSOpenSearchHybridOpenSearchClusterRed
+        exp_alerts: []
+      - eval_time: 20m
+        alertname: MageOSOpenSearchHybridOpenSearchClusterYellow
+        exp_alerts: []
+      - eval_time: 20m
+        alertname: MageOSOpenSearchHybridOpenSearchJVMHeapHigh
+        exp_alerts: []
+      - eval_time: 20m
+        alertname: MageOSOpenSearchHybridOpenSearchDiskHigh
+        exp_alerts: []
+      - eval_time: 20m
+        alertname: MageOSOpenSearchHybridOpenSearchCircuitBreakerTrips
+        exp_alerts: []
+      - eval_time: 20m
+        alertname: MageOSOpenSearchHybridOpenSearchShardAllocationRestricted
+        exp_alerts: []
+
+  - name: opensearch failure conditions preserve their cluster and node identity
+    interval: 1m
+    input_series:
+      - series: 'up{instance="127.0.0.1:9200",job="mageos-opensearch-hybrid-opensearch"}'
+        values: 0+0x20
+      - series: 'up{instance="127.0.0.1:9201",job="mageos-opensearch-hybrid-opensearch"}'
+        values: 1+0x20
+      - series: 'up{instance="127.0.0.1:9202",job="mageos-opensearch-hybrid-opensearch"}'
+        values: 1+0x20
+      - series: 'opensearch_cluster_status{cluster="catalog-red",instance="127.0.0.1:9201",job="mageos-opensearch-hybrid-opensearch"}'
+        values: 2+0x20
+      - series: 'opensearch_cluster_status{cluster="catalog-yellow",instance="127.0.0.1:9202",job="mageos-opensearch-hybrid-opensearch"}'
+        values: 1+0x20
+      - series: 'opensearch_jvm_mem_heap_used_percent{cluster="catalog-red",instance="127.0.0.1:9201",job="mageos-opensearch-hybrid-opensearch",node="catalog-1"}'
+        values: 90+0x20
+      - series: 'opensearch_fs_path_available_bytes{cluster="catalog-red",instance="127.0.0.1:9201",job="mageos-opensearch-hybrid-opensearch",node="catalog-1",path="/data"}'
+        values: 5+0x20
+      - series: 'opensearch_fs_path_total_bytes{cluster="catalog-red",instance="127.0.0.1:9201",job="mageos-opensearch-hybrid-opensearch",node="catalog-1",path="/data"}'
+        values: 100+0x20
+      - series: 'opensearch_circuitbreaker_tripped_count{cluster="catalog-red",instance="127.0.0.1:9201",job="mageos-opensearch-hybrid-opensearch",name="parent",node="catalog-1"}'
+        values: 0+1x20
+      - series: 'opensearch_cluster_routing_allocation_enabled{cluster="catalog-red",instance="127.0.0.1:9201",job="mageos-opensearch-hybrid-opensearch"}'
+        values: 3+0x20
+    alert_rule_test:
+      - eval_time: 20m
+        alertname: MageOSOpenSearchHybridOpenSearchUnavailable
+        exp_alerts:
+          - exp_labels:
+              instance: 127.0.0.1:9200
+              job: mageos-opensearch-hybrid-opensearch
+              severity: high
+            exp_annotations:
+              summary: A Mage-OS OpenSearch Hybrid OpenSearch target is unavailable
+      - eval_time: 20m
+        alertname: MageOSOpenSearchHybridOpenSearchClusterRed
+        exp_alerts:
+          - exp_labels:
+              cluster: catalog-red
+              instance: 127.0.0.1:9201
+              job: mageos-opensearch-hybrid-opensearch
+              severity: critical
+            exp_annotations:
+              summary: A Mage-OS OpenSearch Hybrid OpenSearch cluster is red
+      - eval_time: 20m
+        alertname: MageOSOpenSearchHybridOpenSearchClusterYellow
+        exp_alerts:
+          - exp_labels:
+              cluster: catalog-yellow
+              instance: 127.0.0.1:9202
+              job: mageos-opensearch-hybrid-opensearch
+              severity: warning
+            exp_annotations:
+              summary: A Mage-OS OpenSearch Hybrid OpenSearch cluster remains yellow
+      - eval_time: 20m
+        alertname: MageOSOpenSearchHybridOpenSearchJVMHeapHigh
+        exp_alerts:
+          - exp_labels:
+              cluster: catalog-red
+              instance: 127.0.0.1:9201
+              job: mageos-opensearch-hybrid-opensearch
+              node: catalog-1
+              severity: warning
+            exp_annotations:
+              summary: A Mage-OS OpenSearch Hybrid OpenSearch node has sustained high JVM heap use
+      - eval_time: 20m
+        alertname: MageOSOpenSearchHybridOpenSearchDiskHigh
+        exp_alerts:
+          - exp_labels:
+              cluster: catalog-red
+              instance: 127.0.0.1:9201
+              job: mageos-opensearch-hybrid-opensearch
+              node: catalog-1
+              severity: high
+            exp_annotations:
+              summary: A Mage-OS OpenSearch Hybrid OpenSearch data path exceeds 90 percent disk use
+      - eval_time: 20m
+        alertname: MageOSOpenSearchHybridOpenSearchCircuitBreakerTrips
+        exp_alerts:
+          - exp_labels:
+              cluster: catalog-red
+              instance: 127.0.0.1:9201
+              job: mageos-opensearch-hybrid-opensearch
+              name: parent
+              node: catalog-1
+              severity: high
+            exp_annotations:
+              summary: A Mage-OS OpenSearch Hybrid OpenSearch circuit breaker has tripped
+      - eval_time: 20m
+        alertname: MageOSOpenSearchHybridOpenSearchShardAllocationRestricted
+        exp_alerts:
+          - exp_labels:
+              cluster: catalog-red
+              instance: 127.0.0.1:9201
+              job: mageos-opensearch-hybrid-opensearch
+              severity: warning
+            exp_annotations:
+              summary: Mage-OS OpenSearch Hybrid OpenSearch shard allocation is restricted
+
+  - name: healthy rabbitmq metrics do not alert
+    interval: 1m
+    input_series:
+      - series: 'up{instance="127.0.0.1:15692",job="mageos-opensearch-hybrid-rabbitmq"}'
+        values: 1+0x20
+      - series: 'up{instance="127.0.0.1:15692",job="mageos-opensearch-hybrid-rabbitmq-queues"}'
+        values: 1+0x20
+      - series: 'rabbitmq_detailed_queue_consumers{instance="127.0.0.1:15692",job="mageos-opensearch-hybrid-rabbitmq-queues",queue="mageos.opensearch_hybrid.embedding",vhost="/"}'
+        values: 2+0x20
+      - series: 'rabbitmq_detailed_queue_consumers{instance="127.0.0.1:15692",job="mageos-opensearch-hybrid-rabbitmq-queues",queue="mageos.opensearch_hybrid.correctness_priority",vhost="/"}'
+        values: 1+0x20
+      - series: 'rabbitmq_detailed_queue_head_message_timestamp{instance="127.0.0.1:15692",job="mageos-opensearch-hybrid-rabbitmq-queues",queue="mageos.opensearch_hybrid.embedding",vhost="/"}'
+        values: 0+60x20
+      - series: 'rabbitmq_detailed_queue_head_message_timestamp{instance="127.0.0.1:15692",job="mageos-opensearch-hybrid-rabbitmq-queues",queue="mageos.opensearch_hybrid.correctness_priority",vhost="/"}'
+        values: 0+60x20
+      - series: 'rabbitmq_detailed_queue_messages{instance="127.0.0.1:15692",job="mageos-opensearch-hybrid-rabbitmq-queues",queue="mageos.opensearch_hybrid.embedding.dead",vhost="/"}'
+        values: 0+0x20
+      - series: 'rabbitmq_detailed_queue_messages{instance="127.0.0.1:15692",job="mageos-opensearch-hybrid-rabbitmq-queues",queue="mageos.opensearch_hybrid.correctness_priority.dead",vhost="/"}'
+        values: 0+0x20
+      - series: 'rabbitmq_detailed_queue_messages_redelivered_total{instance="127.0.0.1:15692",job="mageos-opensearch-hybrid-rabbitmq-queues",queue="mageos.opensearch_hybrid.embedding",vhost="/"}'
+        values: 0+0x20
+    alert_rule_test:
+      - eval_time: 20m
+        alertname: MageOSOpenSearchHybridRabbitMQUnavailable
+        exp_alerts: []
+      - eval_time: 20m
+        alertname: MageOSOpenSearchHybridRabbitMQQueueMissing
+        exp_alerts: []
+      - eval_time: 20m
+        alertname: MageOSOpenSearchHybridRabbitMQConsumerMissing
+        exp_alerts: []
+      - eval_time: 20m
+        alertname: MageOSOpenSearchHybridRabbitMQPriorityWorkOld
+        exp_alerts: []
+      - eval_time: 20m
+        alertname: MageOSOpenSearchHybridRabbitMQEmbeddingWorkOld
+        exp_alerts: []
+      - eval_time: 20m
+        alertname: MageOSOpenSearchHybridRabbitMQDeadLettered
+        exp_alerts: []
+      - eval_time: 20m
+        alertname: MageOSOpenSearchHybridRabbitMQRedeliveryBurst
+        exp_alerts: []
+
+  - name: rabbitmq failure conditions preserve queue identity
+    interval: 1m
+    input_series:
+      - series: 'up{instance="127.0.0.1:15692",job="mageos-opensearch-hybrid-rabbitmq"}'
+        values: 0+0x20
+      - series: 'up{instance="127.0.0.1:15692",job="mageos-opensearch-hybrid-rabbitmq-queues"}'
+        values: 1+0x20
+      - series: 'up{instance="127.0.0.1:15693",job="mageos-opensearch-hybrid-rabbitmq-queues"}'
+        values: 1+0x20
+      - series: 'rabbitmq_detailed_queue_consumers{instance="127.0.0.1:15692",job="mageos-opensearch-hybrid-rabbitmq-queues",queue="mageos.opensearch_hybrid.embedding",vhost="/"}'
+        values: 0+0x20
+      - series: 'rabbitmq_detailed_queue_consumers{instance="127.0.0.1:15692",job="mageos-opensearch-hybrid-rabbitmq-queues",queue="mageos.opensearch_hybrid.correctness_priority",vhost="/"}'
+        values: 0+0x20
+      - series: 'rabbitmq_detailed_queue_head_message_timestamp{instance="127.0.0.1:15692",job="mageos-opensearch-hybrid-rabbitmq-queues",queue="mageos.opensearch_hybrid.embedding",vhost="/"}'
+        values: 0+0x20
+      - series: 'rabbitmq_detailed_queue_head_message_timestamp{instance="127.0.0.1:15692",job="mageos-opensearch-hybrid-rabbitmq-queues",queue="mageos.opensearch_hybrid.correctness_priority",vhost="/"}'
+        values: 0+0x20
+      - series: 'rabbitmq_detailed_queue_messages{instance="127.0.0.1:15692",job="mageos-opensearch-hybrid-rabbitmq-queues",queue="mageos.opensearch_hybrid.embedding.dead",vhost="/"}'
+        values: 1+0x20
+      - series: 'rabbitmq_detailed_queue_messages_redelivered_total{instance="127.0.0.1:15692",job="mageos-opensearch-hybrid-rabbitmq-queues",queue="mageos.opensearch_hybrid.embedding",vhost="/"}'
+        values: 0+2x20
+    alert_rule_test:
+      - eval_time: 20m
+        alertname: MageOSOpenSearchHybridRabbitMQUnavailable
+        exp_alerts:
+          - exp_labels:
+              instance: 127.0.0.1:15692
+              job: mageos-opensearch-hybrid-rabbitmq
+              severity: high
+            exp_annotations:
+              summary: A Mage-OS OpenSearch Hybrid RabbitMQ metrics target is unavailable
+      - eval_time: 20m
+        alertname: MageOSOpenSearchHybridRabbitMQQueueMissing
+        exp_alerts:
+          - exp_labels:
+              instance: 127.0.0.1:15693
+              job: mageos-opensearch-hybrid-rabbitmq-queues
+              queue: mageos.opensearch_hybrid.embedding
+              severity: critical
+            exp_annotations:
+              summary: A required Mage-OS OpenSearch Hybrid RabbitMQ queue is missing
+          - exp_labels:
+              instance: 127.0.0.1:15693
+              job: mageos-opensearch-hybrid-rabbitmq-queues
+              queue: mageos.opensearch_hybrid.correctness_priority
+              severity: critical
+            exp_annotations:
+              summary: A required Mage-OS OpenSearch Hybrid RabbitMQ queue is missing
+      - eval_time: 20m
+        alertname: MageOSOpenSearchHybridRabbitMQConsumerMissing
+        exp_alerts:
+          - exp_labels:
+              instance: 127.0.0.1:15692
+              job: mageos-opensearch-hybrid-rabbitmq-queues
+              queue: mageos.opensearch_hybrid.embedding
+              severity: high
+              vhost: "/"
+            exp_annotations:
+              summary: A Mage-OS OpenSearch Hybrid RabbitMQ processing queue has no consumer
+          - exp_labels:
+              instance: 127.0.0.1:15692
+              job: mageos-opensearch-hybrid-rabbitmq-queues
+              queue: mageos.opensearch_hybrid.correctness_priority
+              severity: high
+              vhost: "/"
+            exp_annotations:
+              summary: A Mage-OS OpenSearch Hybrid RabbitMQ processing queue has no consumer
+      - eval_time: 20m
+        alertname: MageOSOpenSearchHybridRabbitMQPriorityWorkOld
+        exp_alerts:
+          - exp_labels:
+              instance: 127.0.0.1:15692
+              job: mageos-opensearch-hybrid-rabbitmq-queues
+              queue: mageos.opensearch_hybrid.correctness_priority
+              severity: critical
+              vhost: "/"
+            exp_annotations:
+              summary: Mage-OS OpenSearch Hybrid correctness-priority work is older than two minutes
+      - eval_time: 20m
+        alertname: MageOSOpenSearchHybridRabbitMQEmbeddingWorkOld
+        exp_alerts:
+          - exp_labels:
+              instance: 127.0.0.1:15692
+              job: mageos-opensearch-hybrid-rabbitmq-queues
+              queue: mageos.opensearch_hybrid.embedding
+              severity: high
+              vhost: "/"
+            exp_annotations:
+              summary: Mage-OS OpenSearch Hybrid embedding work is older than fifteen minutes
+      - eval_time: 20m
+        alertname: MageOSOpenSearchHybridRabbitMQDeadLettered
+        exp_alerts:
+          - exp_labels:
+              instance: 127.0.0.1:15692
+              job: mageos-opensearch-hybrid-rabbitmq-queues
+              queue: mageos.opensearch_hybrid.embedding.dead
+              severity: high
+              vhost: "/"
+            exp_annotations:
+              summary: Mage-OS OpenSearch Hybrid RabbitMQ dead-letter work requires review
+      - eval_time: 20m
+        alertname: MageOSOpenSearchHybridRabbitMQRedeliveryBurst
+        exp_alerts:
+          - exp_labels:
+              instance: 127.0.0.1:15692
+              job: mageos-opensearch-hybrid-rabbitmq-queues
+              queue: mageos.opensearch_hybrid.embedding
+              severity: warning
+              vhost: "/"
+            exp_annotations:
+              summary: Mage-OS OpenSearch Hybrid RabbitMQ redeliveries are elevated

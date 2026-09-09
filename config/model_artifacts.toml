@@ -1,0 +1,54 @@
+schema_version = 1
+
+# These hashes bind the exact runtime snapshot bytes used by the benchmark. The Hugging Face
+# repository revision selects a commit; this registry prevents a different local snapshot from
+# being relabeled as that commit.
+
+[models.gte_modernbert_base]
+hf_id = "Alibaba-NLP/gte-modernbert-base"
+revision = "e7f32e3c00f91d699e8c43b53106206bcc72bb22"
+snapshot_sha256 = "0d8d0d4e2f4d23ce976688d6ec23684d5328061ba6a05172062f2f249e5067ff"
+files = [
+  "1_Pooling/config.json",
+  "README.md",
+  "config.json",
+  "config_sentence_transformers.json",
+  "model.safetensors",
+  "modules.json",
+  "special_tokens_map.json",
+  "tokenizer.json",
+  "tokenizer_config.json",
+]
+
+[models.granite_embedding_english_r2]
+hf_id = "ibm-granite/granite-embedding-english-r2"
+revision = "47ea694b257b703fee9253d75c2b1f2985180498"
+snapshot_sha256 = "9c6651e1d0c1b6628085f41b655a80bf3596c1bd7d80b10dd1f3ad8bacdee735"
+files = [
+  "1_Pooling/config.json",
+  "README.md",
+  "config.json",
+  "model.safetensors",
+  "modules.json",
+  "sentence_bert_config.json",
+  "special_tokens_map.json",
+  "tokenizer.json",
+  "tokenizer_config.json",
+]
+
+[models.arctic_embed_m_v2]
+hf_id = "Snowflake/snowflake-arctic-embed-m-v2.0"
+revision = "95c2741480856aa9666782eb4afe11959938017f"
+snapshot_sha256 = "f4335e0f0bf47cfdc60590523d2e85d82850b5c038f719f0563b0719fae937bb"
+files = [
+  "README.md",
+  "config.json",
+  "config_sentence_transformers.json",
+  "configuration_hf_alibaba_nlp_gte.py",
+  "model.safetensors",
+  "modeling_hf_alibaba_nlp_gte.py",
+  "modules.json",
+  "special_tokens_map.json",
+  "tokenizer.json",
+  "tokenizer_config.json",
+]

@@ -1,0 +1,134 @@
+{
+  "schema_version": 2,
+  "result_contract": {
+    "version": "native-candidate-score-rerank-v5",
+    "hybrid_request_names": [
+      "quick_search_container",
+      "graphql_product_search"
+    ],
+    "request_sort_contracts": {
+      "quick_search_container": [
+        "native_relevance",
+        "storefront_default_sort_alias"
+      ],
+      "graphql_product_search": ["native_relevance"]
+    },
+    "candidate_universe": "native_opensearch_top_100",
+    "totals_and_aggregations": "native_opensearch",
+    "lexical_score_source": "native_candidate_score",
+    "merchant_search_weight_control": "native_catalog_search",
+    "storefront_default_sort_alias": "is_out_of_stock_asc_position_asc",
+    "candidate_sort_normalization": "native_relevance_with_request_availability_and_entity_id_tiebreak",
+    "availability_ordering": "salable_first_stable_partition",
+    "availability_ordering_scope": "storefront_default_sort_alias_only",
+    "availability_source": "generation_document_is_salable",
+    "pagination_depth": 100,
+    "deep_page_route": "native_lexical_with_matching_sort",
+    "crossing_page": "reranked_prefix_plus_native_tail",
+    "maximum_hybrid_page_size": 100,
+    "activation_requires_explicit_acceptance": true
+  },
+  "model": {
+    "id": "Snowflake/snowflake-arctic-embed-m-v2.0",
+    "revision": "95c2741480856aa9666782eb4afe11959938017f",
+    "dimension": 256,
+    "similarity": "cosine",
+    "query_prefix": "query: ",
+    "query_template": "{query}",
+    "document_template": "{title}. {description}. {attributes}",
+    "source_recipe_version": "mageos-v1",
+    "lexical_brand_attributes": ["manufacturer"],
+    "semantic_feature_attributes": ["color", "material"]
+  },
+  "lexical": {
+    "candidate_selection": "native_opensearch_top_100",
+    "score_source": "native_candidate_score",
+    "merchant_control": "catalog_search_attribute_weights",
+    "module_field_boosts": null
+  },
+  "fusion": {
+    "query_type": "hybrid",
+    "normalization": "min_max",
+    "combination": "arithmetic_mean",
+    "weights": [0.3, 0.7]
+  },
+  "ann": {
+    "engine": "lucene",
+    "space_type": "cosinesimil",
+    "m": 16,
+    "ef_construction": 128,
+    "k": 100,
+    "ef_search": 800
+  },
+  "mapping": {
+    "dynamic": "strict",
+    "properties": {
+      "entity_id": {"type": "long"},
+      "store_id": {"type": "integer"},
+      "generation_id": {"type": "long"},
+      "sku": {"type": "text"},
+      "sku_normalized": {"type": "keyword"},
+      "title": {"type": "text"},
+      "title_normalized": {"type": "keyword"},
+      "description": {"type": "text"},
+      "product_class": {"type": "text"},
+      "category": {"type": "text"},
+      "brand": {"type": "text"},
+      "features": {"type": "text"},
+      "visibility": {"type": "integer"},
+      "status": {"type": "integer"},
+      "price": {"type": "double"},
+      "customer_group_prices": {
+        "type": "nested",
+        "properties": {
+          "customer_group_id": {"type": "integer"},
+          "website_id": {"type": "integer"},
+          "tax_class_id": {"type": "integer"},
+          "regular_price": {"type": "double"},
+          "final_price": {"type": "double"},
+          "min_price": {"type": "double"},
+          "max_price": {"type": "double"},
+          "tier_price": {"type": "double"}
+        }
+      },
+      "stock_id": {"type": "integer"},
+      "is_salable": {"type": "boolean"},
+      "embedding_eligible": {"type": "boolean"},
+      "source_hash": {"type": "keyword"},
+      "model_revision": {"type": "keyword"},
+      "revision": {"type": "long"},
+      "embedding": {
+        "type": "knn_vector",
+        "dimension": 256,
+        "method": {
+          "name": "hnsw",
+          "engine": "lucene",
+          "space_type": "cosinesimil",
+          "parameters": {"m": 16, "ef_construction": 128}
+        }
+      }
+    }
+  },
+  "index_settings": {
+    "index": {
+      "knn": true,
+      "knn.algo_param.ef_search": 800,
+      "number_of_shards": 1,
+      "number_of_replicas": 0
+    }
+  },
+  "pipeline": {
+    "description": "Mage-OS OpenSearch Hybrid dense min-max fusion",
+    "phase_results_processors": [
+      {
+        "normalization-processor": {
+          "normalization": {"technique": "min_max"},
+          "combination": {
+            "technique": "arithmetic_mean",
+            "parameters": {"weights": [0.3, 0.7]}
+          }
+        }
+      }
+    ]
+  }
+}

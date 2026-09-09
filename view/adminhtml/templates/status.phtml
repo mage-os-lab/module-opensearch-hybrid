@@ -1,0 +1,571 @@
+<?php
+/** @var \MageOS\OpenSearchHybrid\Block\Adminhtml\Status $block */
+/** @var \Magento\Framework\Escaper $escaper */
+$status = $block->getStatus();
+$preview = $block->getImpactPreview();
+$activationPreview = $block->getActivationPreview();
+$operations = $status['operations'];
+$capabilities = $status['capabilities'];
+$similarity = $status['similarity'];
+?>
+<div class="admin__fieldset-wrapper">
+    <div class="admin__fieldset-wrapper-title">
+        <strong class="title"><?= $escaper->escapeHtml(__('Configuration impact preview')) ?></strong>
+    </div>
+    <div class="admin__fieldset-wrapper-content">
+        <p><?= $escaper->escapeHtml(
+            __('Preview generation-affecting changes before saving configuration. No configuration is changed here.')
+        ) ?></p>
+        <form action="<?= $escaper->escapeUrl($block->getPreviewUrl()) ?>" method="post">
+            <?= $block->getBlockHtml('formkey') ?>
+            <fieldset class="admin__fieldset">
+                <div class="admin__field">
+                    <label class="admin__field-label" for="hybrid-impact-path">
+                        <span><?= $escaper->escapeHtml(__('Configuration path')) ?></span>
+                    </label>
+                    <div class="admin__field-control">
+                        <select class="admin__control-select" id="hybrid-impact-path" name="path">
+                            <?php foreach ($block->getImpactPaths() as $path): ?>
+                                <option value="<?= $escaper->escapeHtmlAttr($path) ?>">
+                                    <?= $escaper->escapeHtml($path) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                </div>
+                <div class="admin__field">
+                    <label class="admin__field-label" for="hybrid-impact-scope">
+                        <span><?= $escaper->escapeHtml(__('Scope')) ?></span>
+                    </label>
+                    <div class="admin__field-control">
+                        <select class="admin__control-select" id="hybrid-impact-scope" name="scope">
+                            <option value="default"><?= $escaper->escapeHtml(__('Default')) ?></option>
+                            <option value="websites"><?= $escaper->escapeHtml(__('Website')) ?></option>
+                            <option value="stores"><?= $escaper->escapeHtml(__('Store')) ?></option>
+                        </select>
+                    </div>
+                </div>
+                <div class="admin__field">
+                    <label class="admin__field-label" for="hybrid-impact-scope-id">
+                        <span><?= $escaper->escapeHtml(__('Scope ID')) ?></span>
+                    </label>
+                    <div class="admin__field-control">
+                        <input class="admin__control-text" id="hybrid-impact-scope-id" name="scope_id"
+                               type="number" min="0" value="0"/>
+                    </div>
+                </div>
+                <div class="admin__field">
+                    <label class="admin__field-label" for="hybrid-impact-stores">
+                        <span><?= $escaper->escapeHtml(__('Proposed included store IDs')) ?></span>
+                    </label>
+                    <div class="admin__field-control">
+                        <input class="admin__control-text" id="hybrid-impact-stores"
+                               name="proposed_included_stores" type="text"/>
+                        <div class="note">
+                            <?= $escaper->escapeHtml(
+                                __('Used only for the included-stores path. Empty means all stores.')
+                            ) ?>
+                        </div>
+                    </div>
+                </div>
+                <div class="admin__field">
+                    <div class="admin__field-control">
+                        <button class="action-primary" type="submit">
+                            <span><?= $escaper->escapeHtml(__('Preview impact')) ?></span>
+                        </button>
+                    </div>
+                </div>
+            </fieldset>
+        </form>
+        <?php if ($preview !== null): ?>
+            <div class="message message-warning">
+                <?= $escaper->escapeHtml(
+                    __(
+                        '%1 store(s), %2 estimated documents',
+                        count($preview['affected_store_ids']),
+                        $preview['estimated_documents']
+                    )
+                ) ?>
+            </div>
+            <table class="data-grid">
+                <thead><tr>
+                    <th class="data-grid-th"><?= $escaper->escapeHtml(__('Store ID')) ?></th>
+                    <th class="data-grid-th"><?= $escaper->escapeHtml(__('Estimated documents')) ?></th>
+                </tr></thead>
+                <tbody>
+                <?php foreach ($preview['stores'] as $store): ?>
+                    <tr>
+                        <td><?= $escaper->escapeHtml($store['store_id']) ?></td>
+                        <td><?= $escaper->escapeHtml($store['estimated_documents']) ?></td>
+                    </tr>
+                <?php endforeach; ?>
+                </tbody>
+            </table>
+        <?php endif; ?>
+    </div>
+</div>
+
+<div class="admin__fieldset-wrapper">
+    <div class="admin__fieldset-wrapper-title">
+        <strong class="title"><?= $escaper->escapeHtml(__('Runtime and product similarity')) ?></strong>
+    </div>
+    <div class="admin__fieldset-wrapper-content">
+        <p><?= $escaper->escapeHtml(
+            __(
+                'OpenSearch %1; supported: %2; required: %3',
+                $capabilities['opensearch']['version'] ?? __('Unavailable'),
+                $capabilities['opensearch']['supported'] ? __('Yes') : __('No'),
+                $capabilities['opensearch']['required']
+            )
+        ) ?></p>
+        <p><?= $escaper->escapeHtml(
+            __(
+                'Base64 vector ingestion qualified: %1; exact qualified runtime: %2; evidence: %3',
+                $capabilities['base64_vector_ingestion']['qualified'] ? __('Yes') : __('No'),
+                $capabilities['base64_vector_ingestion']['current_runtime_exactly_qualified']
+                    ? __('Yes')
+                    : __('No'),
+                $capabilities['base64_vector_ingestion']['artifact_sha256']
+            )
+        ) ?></p>
+        <table class="data-grid">
+            <thead><tr>
+                <th class="data-grid-th"><?= $escaper->escapeHtml(__('Store')) ?></th>
+                <th class="data-grid-th"><?= $escaper->escapeHtml(__('Radial state')) ?></th>
+                <th class="data-grid-th"><?= $escaper->escapeHtml(__('Generation')) ?></th>
+                <th class="data-grid-th"><?= $escaper->escapeHtml(__('Accepted profiles')) ?></th>
+                <th class="data-grid-th"><?= $escaper->escapeHtml(__('Circuit')) ?></th>
+                <th class="data-grid-th"><?= $escaper->escapeHtml(__('Reason')) ?></th>
+            </tr></thead>
+            <tbody>
+            <?php foreach ($similarity as $state): ?>
+                <tr>
+                    <td><?= $escaper->escapeHtml($state['store_id']) ?></td>
+                    <td><?= $escaper->escapeHtml($state['state']) ?></td>
+                    <td><?= $escaper->escapeHtml($state['generation_id'] ?? '') ?></td>
+                    <td><?= $escaper->escapeHtml(implode(', ', $state['profiles']['accepted_profile_ids'])) ?></td>
+                    <td><?= $escaper->escapeHtml($state['circuit_state']) ?></td>
+                    <td><?= $escaper->escapeHtml($state['reason'] ?? '') ?></td>
+                </tr>
+            <?php endforeach; ?>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="admin__fieldset-wrapper">
+    <div class="admin__fieldset-wrapper-title">
+        <strong class="title"><?= $escaper->escapeHtml(__('Activation and rollback')) ?></strong>
+    </div>
+    <div class="admin__fieldset-wrapper-content">
+        <p><?= $escaper->escapeHtml(
+            __('Every operation requires a fresh exact preview, a typed target, and activation-specific ACL access.')
+        ) ?></p>
+        <?php if (!$block->canManageActivation()): ?>
+            <div class="message message-notice">
+                <?= $escaper->escapeHtml(__('Your Admin role can view status but cannot activate or roll back.')) ?>
+            </div>
+        <?php else: ?>
+            <form action="<?= $escaper->escapeUrl($block->getActivationPreviewUrl()) ?>" method="post">
+                <?= $block->getBlockHtml('formkey') ?>
+                <input name="operation" type="hidden" value="activate"/>
+                <fieldset class="admin__fieldset">
+                    <legend class="admin__legend">
+                        <span><?= $escaper->escapeHtml(__('Prepare activation')) ?></span>
+                    </legend>
+                    <div class="admin__field">
+                        <label class="admin__field-label" for="hybrid-activate-store">
+                            <span><?= $escaper->escapeHtml(__('Store ID')) ?></span>
+                        </label>
+                        <div class="admin__field-control">
+                            <input class="admin__control-text" id="hybrid-activate-store" name="store"
+                                   type="number" min="1" required/>
+                        </div>
+                    </div>
+                    <div class="admin__field">
+                        <label class="admin__field-label" for="hybrid-activate-generation">
+                            <span><?= $escaper->escapeHtml(__('Ready generation ID')) ?></span>
+                        </label>
+                        <div class="admin__field-control">
+                            <input class="admin__control-text" id="hybrid-activate-generation" name="generation"
+                                   type="number" min="1" required/>
+                        </div>
+                    </div>
+                    <div class="admin__field"><div class="admin__field-control">
+                        <button class="action-secondary" type="submit">
+                            <span><?= $escaper->escapeHtml(__('Preview activation')) ?></span>
+                        </button>
+                    </div></div>
+                </fieldset>
+            </form>
+
+            <form action="<?= $escaper->escapeUrl($block->getActivationPreviewUrl()) ?>" method="post">
+                <?= $block->getBlockHtml('formkey') ?>
+                <input name="operation" type="hidden" value="rollback_native"/>
+                <fieldset class="admin__fieldset">
+                    <legend class="admin__legend">
+                        <span><?= $escaper->escapeHtml(__('Prepare native rollback')) ?></span>
+                    </legend>
+                    <div class="admin__field">
+                        <label class="admin__field-label" for="hybrid-native-store">
+                            <span><?= $escaper->escapeHtml(__('Store ID')) ?></span>
+                        </label>
+                        <div class="admin__field-control">
+                            <input class="admin__control-text" id="hybrid-native-store" name="store"
+                                   type="number" min="1" required/>
+                        </div>
+                    </div>
+                    <div class="admin__field"><div class="admin__field-control">
+                        <button class="action-secondary" type="submit">
+                            <span><?= $escaper->escapeHtml(__('Preview native rollback')) ?></span>
+                        </button>
+                    </div></div>
+                </fieldset>
+            </form>
+
+            <form action="<?= $escaper->escapeUrl($block->getActivationPreviewUrl()) ?>" method="post">
+                <?= $block->getBlockHtml('formkey') ?>
+                <input name="operation" type="hidden" value="rollback_generation"/>
+                <fieldset class="admin__fieldset">
+                    <legend class="admin__legend">
+                        <span><?= $escaper->escapeHtml(__('Prepare retained-generation rollback')) ?></span>
+                    </legend>
+                    <div class="admin__field">
+                        <label class="admin__field-label" for="hybrid-retained-store">
+                            <span><?= $escaper->escapeHtml(__('Store ID')) ?></span>
+                        </label>
+                        <div class="admin__field-control">
+                            <input class="admin__control-text" id="hybrid-retained-store" name="store"
+                                   type="number" min="1" required/>
+                        </div>
+                    </div>
+                    <div class="admin__field">
+                        <label class="admin__field-label" for="hybrid-retained-generation">
+                            <span><?= $escaper->escapeHtml(__('Retained generation ID')) ?></span>
+                        </label>
+                        <div class="admin__field-control">
+                            <input class="admin__control-text" id="hybrid-retained-generation" name="generation"
+                                   type="number" min="1" required/>
+                        </div>
+                    </div>
+                    <div class="admin__field"><div class="admin__field-control">
+                        <button class="action-secondary" type="submit">
+                            <span><?= $escaper->escapeHtml(__('Preview retained rollback')) ?></span>
+                        </button>
+                    </div></div>
+                </fieldset>
+            </form>
+
+            <?php if ($activationPreview !== null): ?>
+                <?php
+                $targetGeneration = $activationPreview['target']['generation'];
+                $reviewGeneration = $targetGeneration ?? $activationPreview['current_generation'];
+                ?>
+                <div class="message message-warning">
+                    <?= $escaper->escapeHtml(
+                        __(
+                            'Review operation %1 for store %2. Applying it changes live store routing.',
+                            $activationPreview['operation'],
+                            $activationPreview['store_id']
+                        )
+                    ) ?>
+                </div>
+                <table class="data-grid">
+                    <tbody>
+                    <tr>
+                        <th><?= $escaper->escapeHtml(__('Current mode')) ?></th>
+                        <td><?= $escaper->escapeHtml($activationPreview['current_state']['activation_mode']) ?></td>
+                    </tr>
+                    <tr>
+                        <th><?= $escaper->escapeHtml(__('Current generation')) ?></th>
+                        <td>
+                            <?= $escaper->escapeHtml(
+                                $activationPreview['current_state']['active_generation_id'] ?? __('None')
+                            ) ?>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th><?= $escaper->escapeHtml(__('Target mode')) ?></th>
+                        <td><?= $escaper->escapeHtml($activationPreview['target']['activation_mode']) ?></td>
+                    </tr>
+                    <tr>
+                        <th><?= $escaper->escapeHtml(__('Target generation')) ?></th>
+                        <td><?= $escaper->escapeHtml($targetGeneration['generation_id'] ?? __('None')) ?></td>
+                    </tr>
+                    <tr>
+                        <th><?= $escaper->escapeHtml(__('Typed confirmation required')) ?></th>
+                        <td><strong><?= $escaper->escapeHtml($activationPreview['human_confirmation']) ?></strong></td>
+                    </tr>
+                    </tbody>
+                </table>
+                <?php if (is_array($reviewGeneration) && !isset($reviewGeneration['missing'])): ?>
+                    <h3><?= $escaper->escapeHtml(__('Exact generation evidence')) ?></h3>
+                    <table class="data-grid">
+                        <tbody>
+                        <tr>
+                            <th><?= $escaper->escapeHtml(__('Generation')) ?></th>
+                            <td><?= $escaper->escapeHtml($reviewGeneration['generation_id']) ?></td>
+                        </tr>
+                        <tr>
+                            <th><?= $escaper->escapeHtml(__('State')) ?></th>
+                            <td><?= $escaper->escapeHtml($reviewGeneration['state']) ?></td>
+                        </tr>
+                        <tr>
+                            <th><?= $escaper->escapeHtml(__('Coverage')) ?></th>
+                            <td>
+                                <?= $escaper->escapeHtml(
+                                    __(
+                                        '%1 of %2',
+                                        $reviewGeneration['coverage_complete'],
+                                        $reviewGeneration['coverage_total']
+                                    )
+                                ) ?>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th><?= $escaper->escapeHtml(__('Coverage failures')) ?></th>
+                            <td><?= $escaper->escapeHtml($reviewGeneration['coverage_failed']) ?></td>
+                        </tr>
+                        <tr>
+                            <th><?= $escaper->escapeHtml(__('Result contract accepted')) ?></th>
+                            <td>
+                                <?= $escaper->escapeHtml(
+                                    $reviewGeneration['result_contract_accepted'] ? __('Yes') : __('No')
+                                ) ?>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th><?= $escaper->escapeHtml(__('Physical index')) ?></th>
+                            <td><?= $escaper->escapeHtml($reviewGeneration['physical_index']) ?></td>
+                        </tr>
+                        <tr>
+                            <th><?= $escaper->escapeHtml(__('Encoder identity')) ?></th>
+                            <td><?= $escaper->escapeHtml($reviewGeneration['encoder_identity_digest'] ?? '') ?></td>
+                        </tr>
+                        </tbody>
+                    </table>
+                    <h3><?= $escaper->escapeHtml(__('Exact validation result')) ?></h3>
+                    <pre>
+                        <?= $escaper->escapeHtml(
+                            $block->serializePreviewValue($reviewGeneration['validation_report'])
+                        ) ?>
+                    </pre>
+                <?php elseif (is_array($reviewGeneration)): ?>
+                    <div class="message message-error">
+                        <?= $escaper->escapeHtml(
+                            __('The current generation row is missing. Native rollback remains available.')
+                        ) ?>
+                    </div>
+                <?php endif; ?>
+                <form action="<?= $escaper->escapeUrl($block->getActivationApplyUrl()) ?>" method="post">
+                    <?= $block->getBlockHtml('formkey') ?>
+                    <input name="operation" type="hidden"
+                           value="<?= $escaper->escapeHtmlAttr($activationPreview['operation']) ?>"/>
+                    <input name="store" type="hidden"
+                           value="<?= $escaper->escapeHtmlAttr($activationPreview['store_id']) ?>"/>
+                    <input name="generation" type="hidden"
+                           value="<?= $escaper->escapeHtmlAttr($targetGeneration['generation_id'] ?? '') ?>"/>
+                    <input name="confirmation_token" type="hidden"
+                           value="<?= $escaper->escapeHtmlAttr($activationPreview['confirmation_token']) ?>"/>
+                    <fieldset class="admin__fieldset">
+                        <div class="admin__field">
+                            <label class="admin__field-label" for="hybrid-activation-confirmation">
+                                <span>
+                                    <?= $escaper->escapeHtml(
+                                        __('Type %1 to confirm', $activationPreview['human_confirmation'])
+                                    ) ?>
+                                </span>
+                            </label>
+                            <div class="admin__field-control">
+                                <input class="admin__control-text" id="hybrid-activation-confirmation"
+                                       name="human_confirmation" type="text" autocomplete="off"
+                                       spellcheck="false" required/>
+                            </div>
+                        </div>
+                        <div class="admin__field"><div class="admin__field-control">
+                            <button class="action-primary" type="submit">
+                                <span><?= $escaper->escapeHtml(__('Apply confirmed operation')) ?></span>
+                            </button>
+                        </div></div>
+                    </fieldset>
+                </form>
+            <?php endif; ?>
+        <?php endif; ?>
+    </div>
+</div>
+
+<div class="admin__fieldset-wrapper">
+    <div class="admin__fieldset-wrapper-title">
+        <strong class="title"><?= $escaper->escapeHtml(__('Operational alerts')) ?></strong>
+    </div>
+    <div class="admin__fieldset-wrapper-content">
+        <?php if ($operations['alerts'] === []): ?>
+            <div class="message message-success">
+                <?= $escaper->escapeHtml(__('No durable-state alerts are active.')) ?>
+            </div>
+        <?php else: ?>
+            <table class="data-grid">
+                <thead><tr>
+                    <th class="data-grid-th"><?= $escaper->escapeHtml(__('Severity')) ?></th>
+                    <th class="data-grid-th"><?= $escaper->escapeHtml(__('Alert')) ?></th>
+                    <th class="data-grid-th"><?= $escaper->escapeHtml(__('Store')) ?></th>
+                    <th class="data-grid-th"><?= $escaper->escapeHtml(__('Generation')) ?></th>
+                    <th class="data-grid-th"><?= $escaper->escapeHtml(__('Detail')) ?></th>
+                </tr></thead>
+                <tbody>
+                <?php foreach ($operations['alerts'] as $alert): ?>
+                    <tr>
+                        <td><?= $escaper->escapeHtml($alert['severity']) ?></td>
+                        <td><?= $escaper->escapeHtml($alert['code']) ?></td>
+                        <td><?= $escaper->escapeHtml($alert['store_id'] ?? '') ?></td>
+                        <td><?= $escaper->escapeHtml($alert['generation_id'] ?? '') ?></td>
+                        <td><?= $escaper->escapeHtml($alert['detail']) ?></td>
+                    </tr>
+                <?php endforeach; ?>
+                </tbody>
+            </table>
+        <?php endif; ?>
+    </div>
+</div>
+
+<div class="admin__fieldset-wrapper">
+    <div class="admin__fieldset-wrapper-title">
+        <strong class="title"><?= $escaper->escapeHtml(__('Store readiness')) ?></strong>
+    </div>
+    <div class="admin__fieldset-wrapper-content">
+        <p><?= $escaper->escapeHtml(__('Contract digest: %1', $status['contract_digest'])) ?></p>
+        <p><?= $escaper->escapeHtml(__('Result contract: %1', $status['result_contract_digest'])) ?></p>
+        <table class="data-grid">
+            <thead><tr>
+                <th class="data-grid-th"><?= $escaper->escapeHtml(__('Store')) ?></th>
+                <th class="data-grid-th"><?= $escaper->escapeHtml(__('Mode')) ?></th>
+                <th class="data-grid-th"><?= $escaper->escapeHtml(__('Active generation')) ?></th>
+                <th class="data-grid-th"><?= $escaper->escapeHtml(__('Required')) ?></th>
+                <th class="data-grid-th"><?= $escaper->escapeHtml(__('Native')) ?></th>
+                <th class="data-grid-th"><?= $escaper->escapeHtml(__('Hybrid')) ?></th>
+                <th class="data-grid-th"><?= $escaper->escapeHtml(__('Ready')) ?></th>
+            </tr></thead>
+            <tbody>
+            <?php foreach ($status['stores'] as $store): ?>
+                <tr>
+                    <td><?= $escaper->escapeHtml($store['store_id']) ?></td>
+                    <td><?= $escaper->escapeHtml($store['activation_mode']) ?></td>
+                    <td><?= $escaper->escapeHtml($store['active_generation_id'] ?? '') ?></td>
+                    <td><?= $escaper->escapeHtml($store['required_watermark']) ?></td>
+                    <td><?= $escaper->escapeHtml($store['native_watermark']) ?></td>
+                    <td><?= $escaper->escapeHtml($store['hybrid_watermark']) ?></td>
+                    <td><?= $escaper->escapeHtml((int)$store['readiness_latch'] === 1 ? __('Yes') : __('No')) ?></td>
+                </tr>
+            <?php endforeach; ?>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="admin__fieldset-wrapper">
+    <div class="admin__fieldset-wrapper-title">
+        <strong class="title"><?= $escaper->escapeHtml(__('Async Events health')) ?></strong>
+    </div>
+    <div class="admin__fieldset-wrapper-content">
+        <p><?= $escaper->escapeHtml(
+            __(
+                'Trace cleanup: %1; retention: %2 days; bounded: %3',
+                $operations['async_event_trace_cleanup']['enabled'] ? __('Enabled') : __('Disabled'),
+                $operations['async_event_trace_cleanup']['retention_days'],
+                $operations['async_event_trace_cleanup']['bounded'] ? __('Yes') : __('No')
+            )
+        ) ?></p>
+        <table class="data-grid">
+            <thead><tr>
+                <th class="data-grid-th"><?= $escaper->escapeHtml(__('Subscription')) ?></th>
+                <th class="data-grid-th"><?= $escaper->escapeHtml(__('Store')) ?></th>
+                <th class="data-grid-th"><?= $escaper->escapeHtml(__('Healthy')) ?></th>
+                <th class="data-grid-th"><?= $escaper->escapeHtml(__('Traces')) ?></th>
+                <th class="data-grid-th"><?= $escaper->escapeHtml(__('Failures')) ?></th>
+                <th class="data-grid-th"><?= $escaper->escapeHtml(__('Oldest trace age')) ?></th>
+            </tr></thead>
+            <tbody>
+            <?php foreach ($operations['subscriptions'] as $subscription): ?>
+                <tr>
+                    <td><?= $escaper->escapeHtml($subscription['subscription_id']) ?></td>
+                    <td><?= $escaper->escapeHtml($subscription['store_id']) ?></td>
+                    <td><?= $escaper->escapeHtml($subscription['healthy'] ? __('Yes') : __('No')) ?></td>
+                    <td><?= $escaper->escapeHtml($subscription['trace_count']) ?></td>
+                    <td><?= $escaper->escapeHtml($subscription['trace_failure_count']) ?></td>
+                    <td><?= $escaper->escapeHtml($subscription['oldest_trace_age_seconds'] ?? '') ?></td>
+                </tr>
+            <?php endforeach; ?>
+            </tbody>
+        </table>
+        <p><?= $escaper->escapeHtml(
+            __(
+                'Query telemetry is emitted to var/log/opensearch-hybrid-query.log. '
+                . 'Aggregation and RabbitMQ consumer metrics must come from the deployment telemetry backend.'
+            )
+        ) ?></p>
+    </div>
+</div>
+
+<div class="admin__fieldset-wrapper">
+    <div class="admin__fieldset-wrapper-title">
+        <strong class="title"><?= $escaper->escapeHtml(__('Generations and coverage')) ?></strong>
+    </div>
+    <div class="admin__fieldset-wrapper-content">
+        <table class="data-grid">
+            <thead><tr>
+                <th class="data-grid-th"><?= $escaper->escapeHtml(__('Generation')) ?></th>
+                <th class="data-grid-th"><?= $escaper->escapeHtml(__('Store')) ?></th>
+                <th class="data-grid-th"><?= $escaper->escapeHtml(__('State')) ?></th>
+                <th class="data-grid-th"><?= $escaper->escapeHtml(__('Coverage')) ?></th>
+                <th class="data-grid-th"><?= $escaper->escapeHtml(__('Failures')) ?></th>
+                <th class="data-grid-th"><?= $escaper->escapeHtml(__('Result contract accepted')) ?></th>
+            </tr></thead>
+            <tbody>
+            <?php foreach ($status['generations'] as $generation): ?>
+                <tr>
+                    <td><?= $escaper->escapeHtml($generation['generation_id']) ?></td>
+                    <td><?= $escaper->escapeHtml($generation['store_id']) ?></td>
+                    <td><?= $escaper->escapeHtml($generation['state']) ?></td>
+                    <td>
+                        <?= $escaper->escapeHtml(
+                            __(
+                                '%1 of %2',
+                                $generation['coverage_complete'],
+                                $generation['coverage_total']
+                            )
+                        ) ?>
+                    </td>
+                    <td><?= $escaper->escapeHtml($generation['coverage_failed']) ?></td>
+                    <td>
+                        <?= $escaper->escapeHtml(
+                            (int)$generation['result_contract_accepted'] === 1 ? __('Yes') : __('No')
+                        ) ?>
+                    </td>
+                </tr>
+            <?php endforeach; ?>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="admin__fieldset-wrapper">
+    <div class="admin__fieldset-wrapper-title">
+        <strong class="title"><?= $escaper->escapeHtml(__('Work by state')) ?></strong>
+    </div>
+    <div class="admin__fieldset-wrapper-content">
+        <table class="data-grid">
+            <thead><tr>
+                <th class="data-grid-th"><?= $escaper->escapeHtml(__('State')) ?></th>
+                <th class="data-grid-th"><?= $escaper->escapeHtml(__('Jobs')) ?></th>
+            </tr></thead>
+            <tbody>
+            <?php foreach ($status['outbox'] as $work): ?>
+                <tr>
+                    <td><?= $escaper->escapeHtml($work['state']) ?></td>
+                    <td><?= $escaper->escapeHtml($work['jobs']) ?></td>
+                </tr>
+            <?php endforeach; ?>
+            </tbody>
+        </table>
+    </div>
+</div>

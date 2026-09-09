@@ -1,0 +1,31 @@
+schema_version = 1
+
+[document_model]
+name = "amazon/neural-sparse/opensearch-neural-sparse-encoding-doc-v2-distill"
+version = "1.0.0"
+model_format = "TORCH_SCRIPT"
+package_url = "https://artifacts.opensearch.org/models/ml-models/amazon/neural-sparse/opensearch-neural-sparse-encoding-doc-v2-distill/1.0.0/torch_script/neural-sparse_opensearch-neural-sparse-encoding-doc-v2-distill-1.0.0-torch_script.zip"
+package_sha256 = "86bab435d031edb2a6d921fd9ac317a7541d5d95666f642b606e7d0ebfb84358"
+package_bytes = 268868981
+maximum_token_length = 256
+maximum_value_ratio = 0.1
+
+[query_tokenizer]
+name = "amazon/neural-sparse/opensearch-neural-sparse-tokenizer-v1"
+version = "1.0.1"
+model_format = "TORCH_SCRIPT"
+content_sha256 = "b3487da9c58ac90541b720f3b367084f271d280c7f3bdc3e6d9c9a269fb31950"
+content_bytes = 567691
+
+[index]
+name = "opensearch-hybrid-trec-ps-2024-sparse-v1"
+text_field = "sparse_text"
+embedding_field = "sparse_embedding"
+shards = 1
+replicas = 0
+bulk_request_size = 100
+
+[runtime]
+expected_opensearch_version = "2.19.6"
+inference_batch_size = 64
+minimum_preflight_documents_per_second = 150.0

@@ -1,0 +1,30 @@
+LICENSE*.txt whitespace=-blank-at-eol,-blank-at-eof
+
+# Keep Composer and Git distribution archives focused on the Magento module.
+/.github export-ignore
+/.venv export-ignore
+/.uv-cache export-ignore
+/.pytest_cache export-ignore
+/.ruff_cache export-ignore
+/.mypy_cache export-ignore
+/artifacts export-ignore
+/config export-ignore
+/data export-ignore
+/dist export-ignore
+/poc export-ignore
+/results export-ignore
+/runs export-ignore
+/scripts export-ignore
+/services export-ignore
+/tests export-ignore
+/.worktrees export-ignore
+/.env export-ignore
+/.gitignore export-ignore
+/.python-version export-ignore
+/Makefile export-ignore
+/pyproject.toml export-ignore
+/uv.lock export-ignore
+/composer.lock export-ignore
+/docker-compose.yml export-ignore
+/compose.bench.yml export-ignore
+/compose.opensearch-2.19.yml export-ignore

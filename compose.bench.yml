@@ -1,0 +1,4 @@
+services:
+  opensearch:
+    cpus: 8.0
+    mem_limit: 16g

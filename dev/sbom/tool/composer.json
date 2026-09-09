@@ -1,0 +1,14 @@
+{
+  "name": "mage-os/opensearch-hybrid-sbom-tooling",
+  "description": "Locked CI-only CycloneDX generator for the Mage-OS OpenSearch Hybrid fixture",
+  "type": "project",
+  "require": {
+    "cyclonedx/cyclonedx-php-composer": "6.2.0"
+  },
+  "config": {
+    "allow-plugins": {
+      "cyclonedx/cyclonedx-php-composer": true
+    },
+    "sort-packages": true
+  }
+}

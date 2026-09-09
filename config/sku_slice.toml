@@ -1,0 +1,11 @@
+schema_version = 1
+dataset = "WANDS synthetic SKU and known-item proxy"
+# Frozen seed preserves the registered synthetic query set across the project rename.
+seed = "rocket-search-sku-slice-v1"
+sku_prefix = "RW"
+sku_queries = 100
+exact_title_queries = 100
+lexical_weight = 0.3
+maximum_mrr_regression = 0.01
+alpha = 0.05
+index_name = "opensearch-hybrid-wands-sku-v1"

@@ -1,0 +1,17 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:Module/etc/module.xsd">
+    <module name="MageOS_OpenSearchHybrid">
+        <sequence>
+            <module name="Magento_Backend"/>
+            <module name="Magento_CatalogSearch"/>
+            <module name="Magento_Eav"/>
+            <module name="Magento_InventoryCatalog"/>
+            <module name="Magento_InventoryCatalogSearch"/>
+            <module name="Magento_InventoryIndexer"/>
+            <module name="Magento_OpenSearch"/>
+            <module name="Magento_Store"/>
+            <module name="MageOS_AsyncEvents"/>
+        </sequence>
+    </module>
+</config>

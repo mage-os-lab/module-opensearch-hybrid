@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework-message-queue:etc/publisher.xsd">
+    <publisher topic="mageos.opensearch_hybrid.embedding.process.v1">
+        <connection name="amqp" exchange="mageos-opensearch-hybrid"/>
+    </publisher>
+    <publisher topic="mageos.opensearch_hybrid.correctness.process.v1">
+        <connection name="amqp" exchange="mageos-opensearch-hybrid"/>
+    </publisher>
+    <publisher topic="mageos.opensearch_hybrid.embedding.dead.v1">
+        <connection name="amqp" exchange="mageos-opensearch-hybrid-failover"/>
+    </publisher>
+    <publisher topic="mageos.opensearch_hybrid.correctness.dead.v1">
+        <connection name="amqp" exchange="mageos-opensearch-hybrid-failover"/>
+    </publisher>
+</config>

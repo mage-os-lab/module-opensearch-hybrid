@@ -1,0 +1,30 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework-message-queue:etc/topology.xsd">
+    <exchange name="mageos-opensearch-hybrid" type="topic" connection="amqp" durable="true"
+              autoDelete="false">
+        <binding id="mageosOpenSearchHybridEmbedding" topic="mageos.opensearch_hybrid.embedding.process.v1"
+                 destinationType="queue" destination="mageos.opensearch_hybrid.embedding">
+            <arguments>
+                <argument name="x-dead-letter-exchange" xsi:type="string">mageos-opensearch-hybrid-failover</argument>
+                <argument name="x-dead-letter-routing-key" xsi:type="string">mageos.opensearch_hybrid.embedding.dead.v1</argument>
+            </arguments>
+        </binding>
+        <binding id="mageosOpenSearchHybridCorrectness"
+                 topic="mageos.opensearch_hybrid.correctness.process.v1" destinationType="queue"
+                 destination="mageos.opensearch_hybrid.correctness_priority">
+            <arguments>
+                <argument name="x-dead-letter-exchange" xsi:type="string">mageos-opensearch-hybrid-failover</argument>
+                <argument name="x-dead-letter-routing-key" xsi:type="string">mageos.opensearch_hybrid.correctness.dead.v1</argument>
+            </arguments>
+        </binding>
+    </exchange>
+    <exchange name="mageos-opensearch-hybrid-failover" type="topic" connection="amqp" durable="true"
+              autoDelete="false">
+        <binding id="mageosOpenSearchHybridEmbeddingDead" topic="mageos.opensearch_hybrid.embedding.dead.v1"
+                 destinationType="queue" destination="mageos.opensearch_hybrid.embedding.dead"/>
+        <binding id="mageosOpenSearchHybridCorrectnessDead"
+                 topic="mageos.opensearch_hybrid.correctness.dead.v1" destinationType="queue"
+                 destination="mageos.opensearch_hybrid.correctness_priority.dead"/>
+    </exchange>
+</config>

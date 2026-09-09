@@ -1,0 +1,20 @@
+[Unit]
+Description=Mage-OS OpenSearch Hybrid durable metrics collector for containerized Magento
+After=network-online.target docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+User=@@SUPERVISOR_USER@@
+Group=@@SUPERVISOR_GROUP@@
+Environment=MAGEOS_CLI=@@MAGENTO_CLI_WRAPPER@@
+Environment=OPENMETRICS_TEXTFILE_DIRECTORY=@@NODE_EXPORTER_TEXTFILE_DIRECTORY@@
+Environment=OPENMETRICS_STORE_ID=@@STORE_ID@@
+Environment=OPENMETRICS_QUERY_WINDOW_SECONDS=300
+Environment=OPENMETRICS_QUERY_MAX_BYTES=5242880
+ExecStart=@@COLLECTOR_SCRIPT@@
+TimeoutStartSec=45s
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=full

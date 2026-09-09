@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:Communication/etc/communication.xsd">
+    <topic name="mageos.opensearch_hybrid.embedding.process.v1" request="string" is_synchronous="false">
+        <handler name="mageos.opensearch_hybrid.embedding.handler"
+                 type="MageOS\OpenSearchHybrid\Model\Queue\EmbeddingConsumer" method="process"/>
+    </topic>
+    <topic name="mageos.opensearch_hybrid.correctness.process.v1" request="string" is_synchronous="false">
+        <handler name="mageos.opensearch_hybrid.correctness.handler"
+                 type="MageOS\OpenSearchHybrid\Model\Queue\PriorityConsumer" method="process"/>
+    </topic>
+    <topic name="mageos.opensearch_hybrid.embedding.dead.v1" request="string" is_synchronous="false"/>
+    <topic name="mageos.opensearch_hybrid.correctness.dead.v1" request="string" is_synchronous="false"/>
+</config>

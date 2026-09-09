@@ -1,0 +1,97 @@
+schema_version = 1
+
+[decision]
+primary_metric = "ndcg@10"
+minimum_paired_delta = 0.02
+alpha = 0.05
+multiple_testing_correction = "holm"
+latency_p95_ms = 200
+latency_concurrency = 4
+minimum_distinct_latency_queries = 500
+minimum_judged_at_10 = 0.8
+minimum_ann_recall_at_100 = 0.98
+maximum_trec_orphan_rate = 0.01
+
+[fusion]
+normalization = "min_max"
+combination = "arithmetic_mean"
+lexical_weight_grid = [0.2, 0.3, 0.4, 0.5, 0.6]
+rrf_rank_constants = [1, 5, 10, 20, 60]
+
+[bm25.naive]
+name = "naive"
+fields = ["title", "product_class", "category", "brand", "description", "features"]
+query_type = "best_fields"
+operator = "or"
+tie_breaker = 0.0
+
+[bm25.magento_emulation]
+name = "magento_emulation"
+fields = ["title^5", "product_class^3", "category^3", "brand^2", "description", "features"]
+query_type = "best_fields"
+operator = "or"
+tie_breaker = 0.1
+
+# Post-review challenge arm. It represents a competent Magento integrator configuration rather
+# than stock field boosts alone. WANDS has no merchant SKU field or merchant synonym set, so those
+# two production inputs remain explicitly outside this public-dataset arm.
+[bm25.competent_integrator]
+name = "competent_integrator"
+fields = ["title.magento^6", "product_class.magento^4", "category.magento^4", "brand.magento^2", "description.magento", "features.magento^2"]
+query_type = "best_fields"
+operator = "or"
+tie_breaker = 0.1
+strategy = "competent_integrator"
+minimum_should_match = "2<75%"
+phrase_fields = ["title.magento^8", "brand.magento^2"]
+prefix_fields = ["title.prefix^4", "brand.prefix^2"]
+
+# Five dev-only lexical candidates match the five min_max fusion weights above. This keeps the
+# tuned-BM25 and hybrid query-layer tuning budgets equal.
+[[bm25.tuning_candidates]]
+name = "magento_emulation"
+fields = ["title^5", "product_class^3", "category^3", "brand^2", "description", "features"]
+query_type = "best_fields"
+operator = "or"
+tie_breaker = 0.1
+
+[[bm25.tuning_candidates]]
+name = "title_precision"
+fields = ["title^8", "product_class^2", "category^2", "brand^2", "description", "features"]
+query_type = "best_fields"
+operator = "or"
+tie_breaker = 0.1
+
+[[bm25.tuning_candidates]]
+name = "taxonomy_heavy"
+fields = ["title^4", "product_class^5", "category^5", "brand^2", "description", "features"]
+query_type = "best_fields"
+operator = "or"
+tie_breaker = 0.1
+
+[[bm25.tuning_candidates]]
+name = "attribute_recall"
+fields = ["title^4", "product_class^2", "category^2", "brand^2", "description^2", "features^3"]
+query_type = "best_fields"
+operator = "or"
+tie_breaker = 0.1
+
+[[bm25.tuning_candidates]]
+name = "balanced_precision"
+fields = ["title^6", "product_class^4", "category^3", "brand", "description^0.5", "features^1.5"]
+query_type = "best_fields"
+operator = "or"
+tie_breaker = 0.1
+
+[latency]
+concurrency = [1, 4, 8]
+percentiles = [50, 95, 99]
+maximum_replay_relative_percentile_drift = 0.5
+pagination_depth = 100
+include_layered_navigation_aggregations = true
+allow_query_vector_cache = false
+
+[ann]
+# The first engine-managed search is retained as a failed result. Select the smallest explicit
+# ef_search that clears the recall floor on development, then freeze it for held-out evaluation.
+ef_search_grid = [100, 200, 400, 800, 1600]

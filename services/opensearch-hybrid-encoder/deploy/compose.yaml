@@ -1,0 +1,56 @@
+name: mageos-hybrid-${ENCODER_IDENTITY_SHORT:?Set ENCODER_IDENTITY_SHORT}
+
+services:
+  encoder:
+    image: ${ENCODER_IMAGE:?Set ENCODER_IMAGE to a content-addressed OCI image}
+    pull_policy: ${ENCODER_PULL_POLICY:-always}
+    restart: unless-stopped
+    environment:
+      ENCODER_MODE: production
+      ENCODER_HOST: 0.0.0.0
+      ENCODER_PORT: "8080"
+      ENCODER_MAX_CONCURRENCY: ${ENCODER_MAX_CONCURRENCY:-4}
+      ENCODER_ARTIFACT_ROOT: /srv/encoder/artifacts
+      ENCODER_IDENTITY_MANIFEST: /run/encoder/identity.json
+      ENCODER_EXPECTED_DEPLOYMENT_DIGEST: ${ENCODER_DEPLOYMENT_DIGEST:?Set ENCODER_DEPLOYMENT_DIGEST}
+      ENCODER_API_TOKEN_FILE: /run/secrets/encoder_api_token
+      ENCODER_METRICS_TOKEN_FILE: /run/secrets/encoder_metrics_token
+    secrets:
+      - source: encoder_api_token
+        target: encoder_api_token
+      - source: encoder_metrics_token
+        target: encoder_metrics_token
+    volumes:
+      - type: bind
+        source: ${ENCODER_IDENTITY_MANIFEST_HOST_PATH:?Set the release identity manifest path}
+        target: /run/encoder/identity.json
+        read_only: true
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m,mode=1777
+    user: "${ENCODER_RUN_UID:?Set the non-root encoder UID}:${ENCODER_RUN_GID:?Set the non-root encoder GID}"
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 128
+    cpus: ${ENCODER_CPUS:-8.0}
+    mem_limit: ${ENCODER_MEMORY_LIMIT:-16g}
+    mem_reservation: ${ENCODER_MEMORY_RESERVATION:-4g}
+    stop_grace_period: 30s
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/health/ready', timeout=2).read(1)
+      interval: 10s
+      timeout: 3s
+      retries: 12
+      start_period: 60s
+
+secrets:
+  encoder_api_token:
+    file: ${ENCODER_API_TOKEN_HOST_PATH:?Set the encoder token file path}
+  encoder_metrics_token:
+    file: ${ENCODER_METRICS_TOKEN_HOST_PATH:?Set the encoder metrics token file path}

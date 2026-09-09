@@ -1,0 +1,11 @@
+services:
+  encoder:
+    networks:
+      magento:
+        aliases:
+          - ${ENCODER_NETWORK_ALIAS:?Set the identity-specific network alias}
+
+networks:
+  magento:
+    external: true
+    name: ${MAGENTO_DOCKER_NETWORK:?Set the existing Magento Docker network}

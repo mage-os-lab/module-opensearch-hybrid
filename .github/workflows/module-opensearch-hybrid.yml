@@ -1,0 +1,257 @@
+name: Mage-OS OpenSearch Hybrid
+
+on:
+  pull_request:
+  push:
+  workflow_dispatch:
+    inputs:
+      run_large_catalog:
+        description: Run the isolated 10,000-product generation qualification
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: module-opensearch-hybrid-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  encoder-unit:
+    name: Repository checks and encoder deployment contracts
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+
+      - name: Validate workflow definitions
+        run: make workflow-check
+
+      - name: Configure Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.13.15'
+
+      - name: Configure uv
+        uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
+        with:
+          version: '0.10.2'
+          enable-cache: true
+
+      - name: Configure PHP for monitoring contract tests
+        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # 2.37.2
+        with:
+          php-version: '8.4'
+          coverage: none
+
+      - name: Verify Linux amd64 production dependency lock
+        run: >-
+          python -m pip install --dry-run --only-binary=:all: --require-hashes
+          --requirement services/opensearch-hybrid-encoder/requirements-production.lock
+
+      - name: Audit production encoder dependencies
+        run: >-
+          uvx --from pip-audit==2.10.1 pip-audit
+          --requirement services/opensearch-hybrid-encoder/requirements-production.lock
+          --require-hashes --disable-pip --strict --progress-spinner=off
+
+      - name: Run the complete contributor checks
+        run: make check
+
+      - name: Validate Prometheus monitoring contracts
+        env:
+          PROMETHEUS_IMAGE: >-
+            prom/prometheus@sha256:c62e2f333beae2fdac8c3c7a3daaa7ac81110023cbc5857b0ec541f09d997951
+        run: |
+          install -m 0600 /dev/null "${RUNNER_TEMP}/encoder-metrics-token"
+          install -m 0600 /dev/null "${RUNNER_TEMP}/opensearch-metrics-password"
+          install -m 0644 /etc/ssl/certs/ca-certificates.crt \
+            "${RUNNER_TEMP}/opensearch-metrics-ca.pem"
+          install -m 0600 /dev/null "${RUNNER_TEMP}/rabbitmq-metrics-password"
+          install -m 0644 /etc/ssl/certs/ca-certificates.crt \
+            "${RUNNER_TEMP}/rabbitmq-metrics-ca.pem"
+          docker run --rm --entrypoint /bin/promtool \
+            --volume "${GITHUB_WORKSPACE}/deploy/monitoring:/work:ro" \
+            "${PROMETHEUS_IMAGE}" \
+            check rules /work/prometheus-alert-rules.yml
+          docker run --rm --entrypoint /bin/promtool \
+            --volume "${GITHUB_WORKSPACE}/deploy/monitoring:/work:ro" \
+            "${PROMETHEUS_IMAGE}" \
+            test rules /work/prometheus-alert-rules.test.yml
+          docker run --rm --entrypoint /bin/promtool \
+            --volume "${GITHUB_WORKSPACE}/deploy/monitoring:/work:ro" \
+            --volume "${RUNNER_TEMP}/encoder-metrics-token:/run/secrets/encoder_metrics_token:ro" \
+            "${PROMETHEUS_IMAGE}" \
+            check config /work/prometheus-encoder-scrape.yml.example
+          docker run --rm --entrypoint /bin/promtool \
+            --volume "${GITHUB_WORKSPACE}/deploy/monitoring:/work:ro" \
+            --volume "${RUNNER_TEMP}/opensearch-metrics-password:/run/secrets/opensearch_metrics_password:ro" \
+            --volume "${RUNNER_TEMP}/opensearch-metrics-ca.pem:/run/secrets/opensearch_metrics_ca.pem:ro" \
+            "${PROMETHEUS_IMAGE}" \
+            check config /work/prometheus-opensearch-scrape.yml.example
+          docker run --rm --entrypoint /bin/promtool \
+            --volume "${GITHUB_WORKSPACE}/deploy/monitoring:/work:ro" \
+            --volume "${RUNNER_TEMP}/rabbitmq-metrics-password:/run/secrets/rabbitmq_metrics_password:ro" \
+            --volume "${RUNNER_TEMP}/rabbitmq-metrics-ca.pem:/run/secrets/rabbitmq_metrics_ca.pem:ro" \
+            "${PROMETHEUS_IMAGE}" \
+            check config /work/prometheus-rabbitmq-scrape.yml.example
+
+      - name: Build reproducible module package
+        run: >-
+          uv run --frozen python scripts/50_build_module_package.py build
+          --module-root .
+          --archive ${{ runner.temp }}/mage-os-module-opensearch-hybrid.zip
+          --manifest ${{ runner.temp }}/mage-os-module-opensearch-hybrid.manifest.json
+
+      - name: Verify module package and source payload
+        run: >-
+          uv run --frozen python scripts/50_build_module_package.py verify
+          --module-root .
+          --archive ${{ runner.temp }}/mage-os-module-opensearch-hybrid.zip
+          --manifest ${{ runner.temp }}/mage-os-module-opensearch-hybrid.manifest.json
+
+      - name: Retain verified module package and manifest
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: mage-os-module-opensearch-hybrid-package
+          path: |
+            ${{ runner.temp }}/mage-os-module-opensearch-hybrid.zip
+            ${{ runner.temp }}/mage-os-module-opensearch-hybrid.manifest.json
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Start OpenSearch 3.8 vector fixture
+        run: docker compose -f dev/ci/compose.yaml up -d --wait opensearch
+
+      - name: Qualify OpenSearch 3.8 vector wire parity
+        env:
+          RUN_OPENSEARCH_INTEGRATION: '1'
+          OPENSEARCH_URL: http://127.0.0.1:19201
+        run: >-
+          uv run --frozen pytest
+          tests/test_module_opensearch_hybrid_opensearch.py -q
+
+      - name: Capture OpenSearch vector fixture logs
+        if: failure()
+        run: docker compose -f dev/ci/compose.yaml logs --no-color opensearch
+
+      - name: Stop OpenSearch vector fixture
+        if: always()
+        run: docker compose -f dev/ci/compose.yaml down -v
+
+  mageos-34:
+    name: Mage-OS ${{ matrix.fixture }} / PHP ${{ matrix.php }} / RabbitMQ 4.1 / OpenSearch 3.8
+    runs-on: ubuntu-24.04
+    timeout-minutes: 45
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - fixture: fresh-3.4
+            php: '8.4'
+          - fixture: fresh-3.4
+            php: '8.5'
+          - fixture: upgrade-3.3-to-3.4
+            php: '8.4'
+    env:
+      COMPOSER_NO_INTERACTION: '1'
+    steps:
+      - name: Check out source
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Configure fixture paths
+        run: |
+          {
+            printf '%s\n' \
+              "MAGEOS_FIXTURE_ROOT=${RUNNER_TEMP}/mageos-opensearch-hybrid-ci" \
+              "MAGEOS_MODULE_ARCHIVE=${RUNNER_TEMP}/mage-os-module-opensearch-hybrid.zip" \
+              "MAGEOS_MODULE_MANIFEST=${RUNNER_TEMP}/mage-os-module-opensearch-hybrid.manifest.json" \
+              "MAGEOS_MODULE_INSTALL_ROOT=${RUNNER_TEMP}/mage-os-module-opensearch-hybrid" \
+              "MAGEOS_SBOM_TOOL_ROOT=${RUNNER_TEMP}/mage-os-opensearch-hybrid-sbom-tool" \
+              "MAGEOS_SBOM_PATH=${RUNNER_TEMP}/mage-os-module-opensearch-hybrid-${{ matrix.fixture }}-php-${{ matrix.php }}.cdx.json"
+          } >> "${GITHUB_ENV}"
+
+      - name: Configure PHP
+        uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # 2.37.2
+        with:
+          php-version: ${{ matrix.php }}
+          coverage: none
+          extensions: bcmath, curl, dom, gd, intl, mbstring, mysql, simplexml, soap, sockets, sodium, xsl, zip
+          tools: composer:v2
+
+      - name: Configure Python
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version: '3.13.15'
+
+      - name: Configure uv
+        uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
+        with:
+          version: '0.10.2'
+          enable-cache: true
+
+      - name: Build and extract module package
+        run: |
+          uv run --frozen python scripts/50_build_module_package.py build \
+            --module-root . \
+            --archive "${MAGEOS_MODULE_ARCHIVE}" \
+            --manifest "${MAGEOS_MODULE_MANIFEST}"
+          mkdir "${MAGEOS_MODULE_INSTALL_ROOT}"
+          unzip -q "${MAGEOS_MODULE_ARCHIVE}" -d "${MAGEOS_MODULE_INSTALL_ROOT}"
+          uv run --frozen python scripts/50_build_module_package.py verify \
+            --module-root "${MAGEOS_MODULE_INSTALL_ROOT}" \
+            --archive "${MAGEOS_MODULE_ARCHIVE}" \
+            --manifest "${MAGEOS_MODULE_MANIFEST}"
+
+      - name: Validate module package
+        run: composer validate --strict --no-check-publish "${MAGEOS_MODULE_INSTALL_ROOT}/composer.json"
+
+      - name: Install and audit locked SBOM tooling
+        run: |
+          mkdir "${MAGEOS_SBOM_TOOL_ROOT}"
+          cp dev/sbom/tool/composer.json \
+            dev/sbom/tool/composer.lock \
+            "${MAGEOS_SBOM_TOOL_ROOT}/"
+          composer --working-dir="${MAGEOS_SBOM_TOOL_ROOT}" install \
+            --no-dev --no-interaction --no-progress --prefer-dist
+          composer --working-dir="${MAGEOS_SBOM_TOOL_ROOT}" audit \
+            --locked --no-interaction --no-ansi --abandoned=ignore
+
+      - name: Start fixture services
+        run: docker compose -f dev/ci/compose.yaml up -d --wait
+
+      - name: Install Mage-OS and verify module
+        if: matrix.fixture == 'fresh-3.4'
+        run: dev/ci/run.sh
+
+      - name: Upgrade Mage-OS with the installed module and verify it
+        if: matrix.fixture == 'upgrade-3.3-to-3.4'
+        run: dev/ci/run-upgrade.sh
+
+      - name: Retain resolved Composer SBOM
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: mage-os-module-opensearch-hybrid-${{ matrix.fixture }}-php-${{ matrix.php }}-sbom
+          path: ${{ env.MAGEOS_SBOM_PATH }}
+          if-no-files-found: error
+          retention-days: 30
+
+      - name: Qualify 10,000-product generation
+        if: >-
+          github.event_name == 'workflow_dispatch' &&
+          inputs.run_large_catalog &&
+          matrix.fixture == 'fresh-3.4'
+        run: dev/ci/run-large-catalog.sh
+
+      - name: Capture service logs
+        if: failure()
+        run: docker compose -f dev/ci/compose.yaml logs --no-color
+
+      - name: Stop fixture services
+        if: always()
+        run: docker compose -f dev/ci/compose.yaml down -v

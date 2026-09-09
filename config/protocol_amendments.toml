@@ -1,0 +1,12 @@
+schema_version = 1
+
+[query_runtime_quality_guard]
+amendment_id = "2026-08-21-query-runtime-quality-guard"
+effective_date = "2026-08-21"
+classification = "post_measurement_protocol_amendment"
+supersedes_gate = "int8_fp32_vector_parity_for_decision_eligibility"
+rationale = "Use merchant-facing relevance and ranking stability to decide whether the production query encoder is fit for ranking. Preserve the original vector-parity result as diagnostic evidence."
+maximum_ndcg_at_10_loss = 0.01
+minimum_mean_top10_overlap = 0.80
+minimum_p05_top10_overlap = 0.60
+minimum_top1_agreement = 0.75

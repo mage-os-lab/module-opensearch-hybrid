@@ -1,0 +1,17 @@
+schema_version = 1
+
+[model]
+repo_id = "cross-encoder/ettin-reranker-32m-v1"
+revision = "b33e5ceb5110773ea9cf5e00c9bedc83a8c2afdd"
+license = "apache-2.0"
+max_length = 512
+arm64_onnx_file = "onnx/model_qint8_arm64.onnx"
+x86_64_onnx_file = "onnx/model_quint8_avx2.onnx"
+arm64_runtime_artifacts_sha256 = "cfe99631905513645d215324a819ac1c69e644e1b93bf564e12b979b42079ba5"
+x86_64_runtime_artifacts_sha256 = "d586f3b85a597d05a35444710ef373e2909697631e973a872b36a862f2e9e586"
+
+[experiment]
+candidate_depth = 50
+result_depth = 100
+batch_size = 16
+source_arms = ["tuned_bm25", "dense_minmax"]

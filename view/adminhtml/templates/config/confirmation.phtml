@@ -1,0 +1,45 @@
+<?php
+declare(strict_types=1);
+
+/** @var \MageOS\OpenSearchHybrid\Block\Adminhtml\ConfigConfirmation $block */
+/** @var \Magento\Framework\Escaper $escaper */
+?>
+<fieldset class="config admin__collapsible-block" id="mageos-hybrid-config-confirmation">
+    <legend class="legend">
+        <span><?= $escaper->escapeHtml(__('OpenSearch Hybrid generation impact')) ?></span>
+    </legend>
+    <p>
+        <?= $escaper->escapeHtml(
+            __('Generation-affecting changes require a fresh exact preview before the configuration can be saved.')
+        ) ?>
+    </p>
+    <div class="admin__field">
+        <div class="admin__field-control">
+            <button class="action-secondary" type="button" data-role="hybrid-config-preview">
+                <span><?= $escaper->escapeHtml(__('Preview generation impact')) ?></span>
+            </button>
+        </div>
+    </div>
+    <div class="message" data-role="hybrid-config-impact" hidden></div>
+    <input name="mageos_opensearch_hybrid_confirmation_token" type="hidden"
+           data-role="hybrid-config-token" value=""/>
+    <div class="admin__field" data-role="hybrid-config-confirmation" hidden>
+        <label class="admin__field-label" for="mageos-hybrid-config-human-confirmation">
+            <span><?= $escaper->escapeHtml(__('Type apply to confirm')) ?></span>
+        </label>
+        <div class="admin__field-control">
+            <input class="admin__control-text" id="mageos-hybrid-config-human-confirmation"
+                   name="mageos_opensearch_hybrid_human_confirmation" type="text"
+                   autocomplete="off" value="" data-role="hybrid-config-human"/>
+        </div>
+    </div>
+</fieldset>
+<script type="text/x-magento-init">
+{
+    "#mageos-hybrid-config-confirmation": {
+        "MageOS_OpenSearchHybrid/js/config-confirmation": {
+            "previewUrl": "<?= $escaper->escapeJs($block->getPreviewUrl()) ?>"
+        }
+    }
+}
+</script>

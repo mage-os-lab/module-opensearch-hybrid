@@ -1,0 +1,181 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Config:etc/system_file.xsd">
+    <system>
+        <section id="catalog">
+            <group id="search">
+                <field id="opensearch_server_hostname">
+                    <depends>
+                        <field id="engine" separator=",">opensearch,mageos_opensearch_hybrid</field>
+                    </depends>
+                </field>
+                <field id="opensearch_server_port">
+                    <depends>
+                        <field id="engine" separator=",">opensearch,mageos_opensearch_hybrid</field>
+                    </depends>
+                </field>
+                <field id="opensearch_index_prefix">
+                    <depends>
+                        <field id="engine" separator=",">opensearch,mageos_opensearch_hybrid</field>
+                    </depends>
+                </field>
+                <field id="opensearch_enable_auth">
+                    <depends>
+                        <field id="engine" separator=",">opensearch,mageos_opensearch_hybrid</field>
+                    </depends>
+                </field>
+                <field id="opensearch_username">
+                    <depends>
+                        <field id="engine" separator=",">opensearch,mageos_opensearch_hybrid</field>
+                        <field id="opensearch_enable_auth">1</field>
+                    </depends>
+                </field>
+                <field id="opensearch_password">
+                    <depends>
+                        <field id="engine" separator=",">opensearch,mageos_opensearch_hybrid</field>
+                        <field id="opensearch_enable_auth">1</field>
+                    </depends>
+                </field>
+                <field id="opensearch_server_timeout">
+                    <depends>
+                        <field id="engine" separator=",">opensearch,mageos_opensearch_hybrid</field>
+                    </depends>
+                </field>
+                <field id="opensearch_test_connect_wizard">
+                    <depends>
+                        <field id="engine" separator=",">opensearch,mageos_opensearch_hybrid</field>
+                    </depends>
+                </field>
+                <field id="opensearch_minimum_should_match">
+                    <depends>
+                        <field id="engine" separator=",">opensearch,mageos_opensearch_hybrid</field>
+                    </depends>
+                </field>
+            </group>
+        </section>
+        <section id="mageos_opensearch_hybrid" translate="label" sortOrder="950" showInDefault="1"
+                 showInWebsite="0" showInStore="1">
+            <label>OpenSearch Hybrid</label>
+            <tab>catalog</tab>
+            <resource>MageOS_OpenSearchHybrid::config</resource>
+                <group id="general" translate="label" sortOrder="10" showInDefault="1" showInWebsite="0"
+                       showInStore="0">
+                    <label>General</label>
+                    <field id="enabled" translate="label comment" type="select" sortOrder="10" showInDefault="1"
+                           showInWebsite="0" showInStore="0">
+                        <label>Enabled</label>
+                        <comment>Does not activate a store. Stores without an accepted ready generation use native search.</comment>
+                        <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    </field>
+                    <field id="included_stores" translate="label comment" type="text" sortOrder="20"
+                           showInDefault="1" showInWebsite="0" showInStore="0">
+                        <label>Included Store IDs</label>
+                        <comment>Comma-separated store IDs. Empty includes every store for build eligibility only.</comment>
+                    </field>
+                </group>
+                <group id="encoder" translate="label" sortOrder="20" showInDefault="1" showInWebsite="0"
+                       showInStore="0">
+                    <label>Encoder Deployment</label>
+                    <field id="endpoint" translate="label comment" type="text" sortOrder="10" showInDefault="1"
+                           showInWebsite="0" showInStore="0">
+                        <label>Endpoint</label>
+                        <comment>Private service base URL without a path.</comment>
+                    </field>
+                    <field id="allowed_hosts" translate="label comment" type="text" sortOrder="20"
+                           showInDefault="1" showInWebsite="0" showInStore="0">
+                        <label>Explicitly Allowed Hosts</label>
+                        <comment>Comma-separated exact hosts. Loopback requires an exact entry. Link-local, metadata, unspecified, and multicast addresses are always rejected.</comment>
+                    </field>
+                    <field id="api_token" translate="label" type="obscure" sortOrder="30" showInDefault="1"
+                           showInWebsite="0" showInStore="0">
+                        <label>API Token</label>
+                        <backend_model>Magento\Config\Model\Config\Backend\Encrypted</backend_model>
+                    </field>
+                    <field id="connect_timeout_ms" translate="label" type="text" sortOrder="40" showInDefault="1"
+                           showInWebsite="0" showInStore="0">
+                        <label>Connect Timeout (ms)</label>
+                        <validate>validate-digits</validate>
+                    </field>
+                    <field id="query_timeout_ms" translate="label" type="text" sortOrder="50" showInDefault="1"
+                           showInWebsite="0" showInStore="0">
+                        <label>Query Timeout (ms)</label>
+                        <validate>validate-digits</validate>
+                    </field>
+                    <field id="document_timeout_seconds" translate="label" type="text" sortOrder="60"
+                           showInDefault="1" showInWebsite="0" showInStore="0">
+                        <label>Document Timeout (seconds)</label>
+                        <validate>validate-digits</validate>
+                    </field>
+                    <field id="batch_size" translate="label" type="text" sortOrder="70" showInDefault="1"
+                           showInWebsite="0" showInStore="0">
+                        <label>Document Batch Size</label>
+                        <validate>validate-digits</validate>
+                    </field>
+                    <field id="max_outstanding_batches" translate="label" type="text" sortOrder="80"
+                           showInDefault="1" showInWebsite="0" showInStore="0">
+                        <label>Maximum Outstanding Batches</label>
+                        <validate>validate-digits</validate>
+                    </field>
+                </group>
+                <group id="opensearch" translate="label" sortOrder="30" showInDefault="1" showInWebsite="0"
+                       showInStore="0">
+                    <label>Hybrid OpenSearch Transport</label>
+                    <field id="connect_timeout_ms" translate="label" type="text" sortOrder="10" showInDefault="1"
+                           showInWebsite="0" showInStore="0">
+                        <label>Connect Timeout (ms)</label>
+                        <validate>validate-digits</validate>
+                    </field>
+                    <field id="read_timeout_ms" translate="label" type="text" sortOrder="20" showInDefault="1"
+                           showInWebsite="0" showInStore="0">
+                        <label>Read Timeout (ms)</label>
+                        <validate>validate-digits</validate>
+                    </field>
+                </group>
+                <group id="similarity" translate="label" sortOrder="35" showInDefault="1" showInWebsite="0"
+                       showInStore="1">
+                    <label>Product Similarity</label>
+                    <field id="enabled" translate="label comment" type="select" sortOrder="10"
+                           showInDefault="1" showInWebsite="0" showInStore="1">
+                        <label>Enable Product Similarity</label>
+                        <comment>Disabled by default. It remains unavailable without an accepted threshold profile for the active generation and store.</comment>
+                        <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    </field>
+                </group>
+                <group id="reliability" translate="label" sortOrder="40" showInDefault="1" showInWebsite="0"
+                       showInStore="0">
+                    <label>Reliability</label>
+                    <field id="job_max_attempts" translate="label comment" type="text" sortOrder="10"
+                           showInDefault="1" showInWebsite="0" showInStore="0">
+                        <label>Maximum Automated Job Attempts</label>
+                        <comment>The final failed delivery becomes dead work and requires an explicit manual replay.</comment>
+                        <validate>validate-digits</validate>
+                    </field>
+                    <field id="failure_threshold" translate="label" type="text" sortOrder="20" showInDefault="1"
+                           showInWebsite="0" showInStore="0">
+                        <label>Failures Before Circuit Opens</label>
+                        <validate>validate-digits</validate>
+                    </field>
+                    <field id="circuit_open_seconds" translate="label" type="text" sortOrder="30"
+                           showInDefault="1" showInWebsite="0" showInStore="0">
+                        <label>Circuit Open Duration (seconds)</label>
+                        <validate>validate-digits</validate>
+                    </field>
+                    <field id="previous_generation_retention_days" translate="label" type="text" sortOrder="40"
+                           showInDefault="1" showInWebsite="0" showInStore="0">
+                        <label>Previous Generation Retention (days)</label>
+                        <validate>validate-digits</validate>
+                    </field>
+                </group>
+                <group id="privacy" translate="label" sortOrder="50" showInDefault="1" showInWebsite="0"
+                       showInStore="0">
+                    <label>Privacy</label>
+                    <field id="query_logging" translate="label comment" type="select" sortOrder="10"
+                           showInDefault="1" showInWebsite="0" showInStore="0">
+                        <label>Log Raw Query Text</label>
+                        <comment>Off by default. Enabling requires an approved retention and deletion policy.</comment>
+                        <source_model>Magento\Config\Model\Config\Source\Yesno</source_model>
+                    </field>
+                </group>
+        </section>
+    </system>
+</config>

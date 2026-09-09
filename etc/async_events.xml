@@ -1,0 +1,10 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:module:MageOS_AsyncEvents:etc/async_events.xsd">
+    <async_event name="mageos.opensearch_hybrid.embedding.batch.v1">
+        <service class="MageOS\OpenSearchHybrid\Api\JobPayloadInterface" method="get"/>
+        <resources>
+            <resource>MageOS_OpenSearchHybrid::subscriptions</resource>
+        </resources>
+    </async_event>
+</config>

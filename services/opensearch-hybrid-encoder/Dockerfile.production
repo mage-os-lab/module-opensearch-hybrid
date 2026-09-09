@@ -1,0 +1,40 @@
+ARG PYTHON_BASE_IMAGE=python:3.13.15-slim-trixie@sha256:16f75ad0fbc6c4883a8afd63b2d700c3cf68ccffc1aaeca5304ca0a3a908451f
+FROM ${PYTHON_BASE_IMAGE}
+
+ARG SOURCE_REVISION
+ARG SOURCE_URL
+LABEL org.opencontainers.image.source="${SOURCE_URL}" \
+      org.opencontainers.image.revision="${SOURCE_REVISION}" \
+      org.opencontainers.image.title="Mage-OS OpenSearch Hybrid Encoder" \
+      org.opencontainers.image.description="Identity-sealed ONNX encoder companion for Mage-OS"
+
+RUN test -n "${SOURCE_URL}" && test -n "${SOURCE_REVISION}"
+
+ENV ENCODER_HOST=0.0.0.0 \
+    ENCODER_PORT=8080 \
+    ENCODER_MODE=production \
+    ENCODER_MAX_CONCURRENCY=4 \
+    ENCODER_ARTIFACT_ROOT=/srv/encoder/artifacts \
+    ENCODER_IDENTITY_MANIFEST=/run/encoder/identity.json \
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PYTHONFAULTHANDLER=1 \
+    PYTHONPATH=/srv/encoder/src \
+    PYTHONUNBUFFERED=1
+
+WORKDIR /srv/encoder
+
+COPY requirements-production.lock /srv/encoder/requirements-production.lock
+RUN python -m pip install \
+      --only-binary=:all: \
+      --require-hashes \
+      --requirement /srv/encoder/requirements-production.lock
+
+COPY src /srv/encoder/src
+COPY --chown=65532:65532 release/artifacts/ /srv/encoder/artifacts/
+
+USER 65532:65532
+EXPOSE 8080
+
+HEALTHCHECK --interval=10s --timeout=3s --retries=12 CMD ["python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/health/ready', timeout=2).read(1)"]
+ENTRYPOINT ["python", "-m", "mageos_opensearch_hybrid_encoder.server"]

@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Backend:etc/menu.xsd">
+    <menu>
+        <add id="MageOS_OpenSearchHybrid::status" title="OpenSearch Hybrid" translate="title"
+             module="MageOS_OpenSearchHybrid" sortOrder="40" parent="Magento_Backend::system_tools"
+             action="mageos_opensearch_hybrid/status/index" resource="MageOS_OpenSearchHybrid::status"/>
+    </menu>
+</config>

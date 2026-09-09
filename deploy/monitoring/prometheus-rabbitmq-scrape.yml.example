@@ -1,0 +1,40 @@
+scrape_configs:
+  - job_name: mageos-opensearch-hybrid-rabbitmq
+    scrape_interval: 30s
+    scrape_timeout: 10s
+    metrics_path: /metrics
+    scheme: https
+    follow_redirects: false
+    basic_auth:
+      username: mageos_hybrid_monitor
+      password_file: /run/secrets/rabbitmq_metrics_password
+    tls_config:
+      ca_file: /run/secrets/rabbitmq_metrics_ca.pem
+      min_version: TLS12
+    static_configs:
+      - targets:
+          - 127.0.0.1:15692
+
+  - job_name: mageos-opensearch-hybrid-rabbitmq-queues
+    scrape_interval: 30s
+    scrape_timeout: 10s
+    metrics_path: /metrics/detailed
+    params:
+      family:
+        - queue_coarse_metrics
+        - queue_consumer_count
+        - queue_delivery_metrics
+        - queue_metrics
+      vhost:
+        - "/"
+    scheme: https
+    follow_redirects: false
+    basic_auth:
+      username: mageos_hybrid_monitor
+      password_file: /run/secrets/rabbitmq_metrics_password
+    tls_config:
+      ca_file: /run/secrets/rabbitmq_metrics_ca.pem
+      min_version: TLS12
+    static_configs:
+      - targets:
+          - 127.0.0.1:15692

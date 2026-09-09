@@ -1,0 +1,365 @@
+<?xml version="1.0"?>
+<schema xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:Setup/Declaration/Schema/etc/schema.xsd">
+    <table name="mageos_opensearch_hybrid_generation" resource="default" engine="innodb"
+           comment="OpenSearch Hybrid Generations">
+        <column xsi:type="bigint" name="generation_id" unsigned="true" nullable="false" identity="true"
+                comment="Generation ID"/>
+        <column xsi:type="smallint" name="store_id" unsigned="true" nullable="false" comment="Store ID"/>
+        <column xsi:type="varchar" name="state" nullable="false" length="16" default="NEW"
+                comment="Generation State"/>
+        <column xsi:type="varchar" name="model_id" nullable="false" length="255" comment="Model ID"/>
+        <column xsi:type="char" name="model_revision" nullable="false" length="64" comment="Model Revision"/>
+        <column xsi:type="smallint" name="dimension" unsigned="true" nullable="false" comment="Vector Dimension"/>
+        <column xsi:type="varchar" name="recipe_version" nullable="false" length="32" comment="Recipe Version"/>
+        <column xsi:type="varchar" name="contract_version" nullable="false" length="64" comment="Result Contract Version"/>
+        <column xsi:type="char" name="contract_digest" nullable="false" length="64" comment="Contract Digest"/>
+        <column xsi:type="char" name="result_contract_digest" nullable="false" length="64"
+                comment="Result Contract Digest"/>
+        <column xsi:type="char" name="mapping_digest" nullable="false" length="64" comment="Mapping Digest"/>
+        <column xsi:type="char" name="pipeline_digest" nullable="false" length="64" comment="Pipeline Digest"/>
+        <column xsi:type="varchar" name="physical_index" nullable="false" length="255" comment="Physical Index"/>
+        <column xsi:type="varchar" name="pipeline_id" nullable="false" length="255" comment="Pipeline ID"/>
+        <column xsi:type="varchar" name="encoder_endpoint" nullable="false" length="1024"
+                comment="Encoder Endpoint"/>
+        <column xsi:type="char" name="encoder_identity_digest" nullable="true" length="64"
+                comment="Encoder Identity Digest"/>
+        <column xsi:type="char" name="scope_digest" nullable="true" length="64"
+                comment="Store Scope Digest"/>
+        <column xsi:type="bigint" name="captured_change_id" unsigned="true" nullable="false" default="0"
+                comment="Captured Change ID"/>
+        <column xsi:type="bigint" name="coverage_total" unsigned="true" nullable="false" default="0"
+                comment="Coverage Total"/>
+        <column xsi:type="bigint" name="coverage_complete" unsigned="true" nullable="false" default="0"
+                comment="Coverage Complete"/>
+        <column xsi:type="bigint" name="coverage_failed" unsigned="true" nullable="false" default="0"
+                comment="Coverage Failed"/>
+        <column xsi:type="boolean" name="result_contract_accepted" nullable="false" default="false"
+                comment="Result Contract Accepted"/>
+        <column xsi:type="boolean" name="is_fake" nullable="false" default="true"
+                comment="Deterministic Development Generation"/>
+        <column xsi:type="text" name="validation_report" nullable="true" comment="Validation Report"/>
+        <column xsi:type="timestamp" name="created_at" nullable="false" default="CURRENT_TIMESTAMP"
+                comment="Created At"/>
+        <column xsi:type="timestamp" name="updated_at" nullable="false" default="CURRENT_TIMESTAMP" on_update="true"
+                comment="Updated At"/>
+        <constraint xsi:type="primary" referenceId="PRIMARY">
+            <column name="generation_id"/>
+        </constraint>
+        <constraint xsi:type="foreign" referenceId="MOS_HYB_GEN_STORE_FK" table="mageos_opensearch_hybrid_generation"
+                    column="store_id" referenceTable="store" referenceColumn="store_id" onDelete="CASCADE"/>
+        <index referenceId="MOS_HYB_GEN_STORE_STATE_IDX" indexType="btree">
+            <column name="store_id"/>
+            <column name="state"/>
+        </index>
+    </table>
+
+    <table name="mageos_opensearch_hybrid_embedding" resource="default" engine="innodb"
+           comment="OpenSearch Hybrid Embeddings">
+        <column xsi:type="bigint" name="embedding_id" unsigned="true" nullable="false" identity="true"
+                comment="Embedding ID"/>
+        <column xsi:type="smallint" name="store_id" unsigned="true" nullable="false" comment="Store ID"/>
+        <column xsi:type="int" name="product_id" unsigned="true" nullable="false" comment="Product ID"/>
+        <column xsi:type="bigint" name="generation_id" unsigned="true" nullable="false" comment="Generation ID"/>
+        <column xsi:type="varchar" name="model_id" nullable="false" length="255" comment="Model ID"/>
+        <column xsi:type="char" name="model_revision" nullable="false" length="64" comment="Model Revision"/>
+        <column xsi:type="smallint" name="dimension" unsigned="true" nullable="false" comment="Vector Dimension"/>
+        <column xsi:type="varchar" name="recipe_version" nullable="false" length="32" comment="Recipe Version"/>
+        <column xsi:type="char" name="source_hash" nullable="false" length="64" comment="Source Hash"/>
+        <column xsi:type="char" name="vector_hash" nullable="true" length="64" comment="Vector Hash"/>
+        <column xsi:type="mediumblob" name="vector" nullable="true" comment="Canonical Float32 Vector"/>
+        <column xsi:type="varchar" name="status" nullable="false" length="16" default="PENDING"
+                comment="Embedding Status"/>
+        <column xsi:type="bigint" name="revision" unsigned="true" nullable="false" default="0"
+                comment="Source Revision"/>
+        <column xsi:type="varchar" name="last_error_class" nullable="true" length="255"
+                comment="Last Error Class"/>
+        <column xsi:type="varchar" name="last_diagnostic" nullable="true" length="1024"
+                comment="Bounded Diagnostic"/>
+        <column xsi:type="timestamp" name="created_at" nullable="false" default="CURRENT_TIMESTAMP"
+                comment="Created At"/>
+        <column xsi:type="timestamp" name="completed_at" nullable="true" comment="Completed At"/>
+        <constraint xsi:type="primary" referenceId="PRIMARY">
+            <column name="embedding_id"/>
+        </constraint>
+        <constraint xsi:type="unique" referenceId="MOS_HYB_EMB_STORE_PRODUCT_GEN_UQ">
+            <column name="store_id"/>
+            <column name="product_id"/>
+            <column name="generation_id"/>
+        </constraint>
+        <constraint xsi:type="foreign" referenceId="MOS_HYB_EMB_GEN_FK" table="mageos_opensearch_hybrid_embedding"
+                    column="generation_id" referenceTable="mageos_opensearch_hybrid_generation"
+                    referenceColumn="generation_id" onDelete="CASCADE"/>
+        <index referenceId="MOS_HYB_EMB_GEN_STATUS_IDX" indexType="btree">
+            <column name="generation_id"/>
+            <column name="status"/>
+        </index>
+        <index referenceId="MOS_HYB_EMB_PRODUCT_IDX" indexType="btree">
+            <column name="product_id"/>
+        </index>
+    </table>
+
+    <table name="mageos_opensearch_hybrid_change_journal" resource="default" engine="innodb"
+           comment="OpenSearch Hybrid Change Journal">
+        <column xsi:type="bigint" name="change_id" unsigned="true" nullable="false" identity="true"
+                comment="Change ID"/>
+        <column xsi:type="smallint" name="store_id" unsigned="true" nullable="false" comment="Store ID"/>
+        <column xsi:type="varchar" name="entity_type" nullable="false" length="32" comment="Entity Type"/>
+        <column xsi:type="bigint" name="entity_id" unsigned="true" nullable="false" comment="Entity ID"/>
+        <column xsi:type="varchar" name="operation" nullable="false" length="32" comment="Operation"/>
+        <column xsi:type="bigint" name="revision" unsigned="true" nullable="false" comment="Revision"/>
+        <column xsi:type="varchar" name="reason" nullable="true" length="255" comment="Change Reason"/>
+        <column xsi:type="varchar" name="native_state" nullable="false" length="16" default="PENDING"
+                comment="Native Index State"/>
+        <column xsi:type="varchar" name="hybrid_state" nullable="false" length="16" default="PENDING"
+                comment="Hybrid Index State"/>
+        <column xsi:type="timestamp" name="native_completed_at" nullable="true"
+                comment="Native Index Completed At"/>
+        <column xsi:type="timestamp" name="hybrid_completed_at" nullable="true"
+                comment="Hybrid Index Completed At"/>
+        <column xsi:type="timestamp" name="created_at" nullable="false" default="CURRENT_TIMESTAMP"
+                comment="Created At"/>
+        <constraint xsi:type="primary" referenceId="PRIMARY">
+            <column name="change_id"/>
+        </constraint>
+        <constraint xsi:type="foreign" referenceId="MOS_HYB_JRN_STORE_FK"
+                    table="mageos_opensearch_hybrid_change_journal" column="store_id" referenceTable="store"
+                    referenceColumn="store_id" onDelete="CASCADE"/>
+        <index referenceId="MOS_HYB_JRN_STORE_CHANGE_IDX" indexType="btree">
+            <column name="store_id"/>
+            <column name="change_id"/>
+        </index>
+        <index referenceId="MOS_HYB_JRN_ENTITY_IDX" indexType="btree">
+            <column name="entity_type"/>
+            <column name="entity_id"/>
+        </index>
+        <index referenceId="MOS_HYB_JRN_NATIVE_STATE_IDX" indexType="btree">
+            <column name="store_id"/>
+            <column name="native_state"/>
+            <column name="change_id"/>
+        </index>
+        <index referenceId="MOS_HYB_JRN_HYBRID_STATE_IDX" indexType="btree">
+            <column name="store_id"/>
+            <column name="hybrid_state"/>
+            <column name="change_id"/>
+        </index>
+    </table>
+
+    <table name="mageos_opensearch_hybrid_generation_progress" resource="default" engine="innodb"
+           comment="OpenSearch Hybrid Generation Progress">
+        <column xsi:type="bigint" name="progress_id" unsigned="true" nullable="false" identity="true"
+                comment="Progress ID"/>
+        <column xsi:type="smallint" name="store_id" unsigned="true" nullable="false" comment="Store ID"/>
+        <column xsi:type="bigint" name="generation_id" unsigned="true" nullable="false" comment="Generation ID"/>
+        <column xsi:type="bigint" name="captured_boundary" unsigned="true" nullable="false" default="0"
+                comment="Captured Boundary"/>
+        <column xsi:type="bigint" name="processed_boundary" unsigned="true" nullable="false" default="0"
+                comment="Processed Boundary"/>
+        <column xsi:type="int" name="last_seeded_product_id" unsigned="true" nullable="false" default="0"
+                comment="Last Seeded Product ID"/>
+        <column xsi:type="bigint" name="seeded_products" unsigned="true" nullable="false" default="0"
+                comment="Seeded Product Count"/>
+        <column xsi:type="varchar" name="seeding_state" nullable="false" length="16" default="PENDING"
+                comment="Full Build Seeding State"/>
+        <column xsi:type="varchar" name="build_refresh_interval" nullable="false" length="16" default="-1"
+                comment="Inactive Build Refresh Interval"/>
+        <column xsi:type="varchar" name="normal_refresh_interval" nullable="false" length="16" default="1s"
+                comment="Normal Refresh Interval"/>
+        <column xsi:type="varchar" name="refresh_state" nullable="false" length="16" default="NORMAL"
+                comment="Build Refresh State"/>
+        <column xsi:type="timestamp" name="updated_at" nullable="false" default="CURRENT_TIMESTAMP" on_update="true"
+                comment="Updated At"/>
+        <constraint xsi:type="primary" referenceId="PRIMARY">
+            <column name="progress_id"/>
+        </constraint>
+        <constraint xsi:type="unique" referenceId="MOS_HYB_PROG_STORE_GEN_UQ">
+            <column name="store_id"/>
+            <column name="generation_id"/>
+        </constraint>
+        <constraint xsi:type="foreign" referenceId="MOS_HYB_PROG_GEN_FK"
+                    table="mageos_opensearch_hybrid_generation_progress" column="generation_id"
+                    referenceTable="mageos_opensearch_hybrid_generation" referenceColumn="generation_id"
+                    onDelete="CASCADE"/>
+    </table>
+
+    <table name="mageos_opensearch_hybrid_store_state" resource="default" engine="innodb"
+           comment="OpenSearch Hybrid Store State">
+        <column xsi:type="smallint" name="store_id" unsigned="true" nullable="false" comment="Store ID"/>
+        <column xsi:type="varchar" name="activation_mode" nullable="false" length="16" default="NATIVE"
+                comment="Activation Mode"/>
+        <column xsi:type="bigint" name="active_generation_id" unsigned="true" nullable="true"
+                comment="Active Generation ID"/>
+        <column xsi:type="bigint" name="required_watermark" unsigned="true" nullable="false" default="0"
+                comment="Required Watermark"/>
+        <column xsi:type="bigint" name="native_watermark" unsigned="true" nullable="false" default="0"
+                comment="Native Watermark"/>
+        <column xsi:type="bigint" name="hybrid_watermark" unsigned="true" nullable="false" default="0"
+                comment="Hybrid Watermark"/>
+        <column xsi:type="boolean" name="readiness_latch" nullable="false" default="false"
+                comment="Readiness Latch"/>
+        <column xsi:type="bigint" name="cache_version" unsigned="true" nullable="false" default="0"
+                comment="Cache Version"/>
+        <column xsi:type="timestamp" name="updated_at" nullable="false" default="CURRENT_TIMESTAMP" on_update="true"
+                comment="Updated At"/>
+        <constraint xsi:type="primary" referenceId="PRIMARY">
+            <column name="store_id"/>
+        </constraint>
+        <constraint xsi:type="foreign" referenceId="MOS_HYB_STATE_STORE_FK"
+                    table="mageos_opensearch_hybrid_store_state" column="store_id" referenceTable="store"
+                    referenceColumn="store_id" onDelete="CASCADE"/>
+        <constraint xsi:type="foreign" referenceId="MOS_HYB_STATE_GEN_FK"
+                    table="mageos_opensearch_hybrid_store_state" column="active_generation_id"
+                    referenceTable="mageos_opensearch_hybrid_generation" referenceColumn="generation_id"
+                    onDelete="SET NULL"/>
+    </table>
+
+    <table name="mageos_opensearch_hybrid_outbox" resource="default" engine="innodb"
+           comment="OpenSearch Hybrid Durable Outbox">
+        <column xsi:type="char" name="job_id" nullable="false" length="36" comment="Job ID"/>
+        <column xsi:type="smallint" name="store_id" unsigned="true" nullable="false" comment="Store ID"/>
+        <column xsi:type="bigint" name="generation_id" unsigned="true" nullable="true" comment="Generation ID"/>
+        <column xsi:type="varchar" name="lane" nullable="false" length="16" comment="Processing Lane"/>
+        <column xsi:type="varchar" name="operation" nullable="false" length="32" comment="Operation"/>
+        <column xsi:type="varchar" name="state" nullable="false" length="16" default="PENDING"
+                comment="Outbox State"/>
+        <column xsi:type="bigint" name="revision" unsigned="true" nullable="false" comment="Job Revision"/>
+        <column xsi:type="bigint" name="earliest_change_id" unsigned="true" nullable="false" default="0"
+                comment="Earliest Change ID"/>
+        <column xsi:type="bigint" name="latest_change_id" unsigned="true" nullable="false" default="0"
+                comment="Latest Change ID"/>
+        <column xsi:type="smallint" name="publish_count" unsigned="true" nullable="false" default="0"
+                comment="Publish Count"/>
+        <column xsi:type="smallint" name="attempt_count" unsigned="true" nullable="false" default="0"
+                comment="Attempt Count"/>
+        <column xsi:type="smallint" name="replay_count" unsigned="true" nullable="false" default="0"
+                comment="Manual Replay Count"/>
+        <column xsi:type="varchar" name="claim_owner" nullable="true" length="128" comment="Claim Owner"/>
+        <column xsi:type="timestamp" name="claim_expires_at" nullable="true" comment="Claim Expiry"/>
+        <column xsi:type="timestamp" name="next_eligible_at" nullable="true" comment="Next Eligible Time"/>
+        <column xsi:type="varchar" name="last_error_class" nullable="true" length="255"
+                comment="Last Error Class"/>
+        <column xsi:type="varchar" name="last_diagnostic" nullable="true" length="1024"
+                comment="Bounded Diagnostic"/>
+        <column xsi:type="timestamp" name="created_at" nullable="false" default="CURRENT_TIMESTAMP"
+                comment="Created At"/>
+        <column xsi:type="timestamp" name="updated_at" nullable="false" default="CURRENT_TIMESTAMP" on_update="true"
+                comment="Updated At"/>
+        <column xsi:type="timestamp" name="completed_at" nullable="true" comment="Completed At"/>
+        <constraint xsi:type="primary" referenceId="PRIMARY">
+            <column name="job_id"/>
+        </constraint>
+        <constraint xsi:type="foreign" referenceId="MOS_HYB_OUT_STORE_FK"
+                    table="mageos_opensearch_hybrid_outbox" column="store_id" referenceTable="store"
+                    referenceColumn="store_id" onDelete="CASCADE"/>
+        <constraint xsi:type="foreign" referenceId="MOS_HYB_OUT_GEN_FK"
+                    table="mageos_opensearch_hybrid_outbox" column="generation_id"
+                    referenceTable="mageos_opensearch_hybrid_generation" referenceColumn="generation_id"
+                    onDelete="CASCADE"/>
+        <index referenceId="MOS_HYB_OUT_STATE_ELIGIBLE_IDX" indexType="btree">
+            <column name="state"/>
+            <column name="next_eligible_at"/>
+        </index>
+        <index referenceId="MOS_HYB_OUT_STORE_GEN_IDX" indexType="btree">
+            <column name="store_id"/>
+            <column name="generation_id"/>
+        </index>
+    </table>
+
+    <table name="mageos_opensearch_hybrid_outbox_item" resource="default" engine="innodb"
+           comment="OpenSearch Hybrid Outbox Items">
+        <column xsi:type="bigint" name="item_id" unsigned="true" nullable="false" identity="true"
+                comment="Item ID"/>
+        <column xsi:type="char" name="job_id" nullable="false" length="36" comment="Job ID"/>
+        <column xsi:type="int" name="product_id" unsigned="true" nullable="false" comment="Product ID"/>
+        <column xsi:type="varchar" name="operation" nullable="false" length="32" comment="Operation"/>
+        <column xsi:type="bigint" name="revision" unsigned="true" nullable="false" comment="Item Revision"/>
+        <column xsi:type="char" name="source_hash" nullable="true" length="64" comment="Expected Source Hash"/>
+        <column xsi:type="varchar" name="state" nullable="false" length="16" default="PENDING"
+                comment="Item State"/>
+        <constraint xsi:type="primary" referenceId="PRIMARY">
+            <column name="item_id"/>
+        </constraint>
+        <constraint xsi:type="unique" referenceId="MOS_HYB_ITEM_JOB_PRODUCT_OP_UQ">
+            <column name="job_id"/>
+            <column name="product_id"/>
+            <column name="operation"/>
+        </constraint>
+        <constraint xsi:type="foreign" referenceId="MOS_HYB_ITEM_JOB_FK"
+                    table="mageos_opensearch_hybrid_outbox_item" column="job_id"
+                    referenceTable="mageos_opensearch_hybrid_outbox" referenceColumn="job_id" onDelete="CASCADE"/>
+        <index referenceId="MOS_HYB_ITEM_PRODUCT_IDX" indexType="btree">
+            <column name="product_id"/>
+        </index>
+    </table>
+
+    <table name="mageos_opensearch_hybrid_activation" resource="default" engine="innodb"
+           comment="OpenSearch Hybrid Activation Audit">
+        <column xsi:type="bigint" name="activation_id" unsigned="true" nullable="false" identity="true"
+                comment="Activation ID"/>
+        <column xsi:type="smallint" name="store_id" unsigned="true" nullable="false" comment="Store ID"/>
+        <column xsi:type="bigint" name="generation_id" unsigned="true" nullable="true" comment="Generation ID"/>
+        <column xsi:type="bigint" name="prior_generation_id" unsigned="true" nullable="true"
+                comment="Prior Generation ID"/>
+        <column xsi:type="varchar" name="mode" nullable="false" length="16" comment="Activation Mode"/>
+        <column xsi:type="varchar" name="status" nullable="false" length="16" comment="Activation Status"/>
+        <column xsi:type="char" name="contract_digest" nullable="true" length="64" comment="Contract Digest"/>
+        <column xsi:type="varchar" name="physical_index" nullable="true" length="255" comment="Physical Index"/>
+        <column xsi:type="bigint" name="high_watermark" unsigned="true" nullable="false" default="0"
+                comment="Activation High Watermark"/>
+        <column xsi:type="text" name="validation_report" nullable="true" comment="Validation Report"/>
+        <column xsi:type="varchar" name="actor" nullable="false" length="255" comment="Actor"/>
+        <column xsi:type="timestamp" name="created_at" nullable="false" default="CURRENT_TIMESTAMP"
+                comment="Created At"/>
+        <column xsi:type="timestamp" name="completed_at" nullable="true" comment="Completed At"/>
+        <constraint xsi:type="primary" referenceId="PRIMARY">
+            <column name="activation_id"/>
+        </constraint>
+        <constraint xsi:type="foreign" referenceId="MOS_HYB_ACT_STORE_FK"
+                    table="mageos_opensearch_hybrid_activation" column="store_id" referenceTable="store"
+                    referenceColumn="store_id" onDelete="CASCADE"/>
+        <index referenceId="MOS_HYB_ACT_STORE_CREATED_IDX" indexType="btree">
+            <column name="store_id"/>
+            <column name="created_at"/>
+        </index>
+    </table>
+
+    <table name="mageos_opensearch_hybrid_cleanup" resource="default" engine="innodb"
+           comment="OpenSearch Hybrid Cleanup Audit">
+        <column xsi:type="bigint" name="cleanup_id" unsigned="true" nullable="false" identity="true"
+                comment="Cleanup ID"/>
+        <column xsi:type="smallint" name="store_id" unsigned="true" nullable="false" comment="Store ID"/>
+        <column xsi:type="bigint" name="generation_id" unsigned="true" nullable="false" comment="Generation ID"/>
+        <column xsi:type="varchar" name="status" nullable="false" length="16" comment="Cleanup Status"/>
+        <column xsi:type="char" name="confirmation_digest" nullable="false" length="64"
+                comment="Confirmation Digest"/>
+        <column xsi:type="varchar" name="generation_state" nullable="false" length="16"
+                comment="Generation State"/>
+        <column xsi:type="varchar" name="physical_index" nullable="false" length="255"
+                comment="Physical Index"/>
+        <column xsi:type="varchar" name="pipeline_id" nullable="false" length="255" comment="Pipeline ID"/>
+        <column xsi:type="char" name="encoder_identity_digest" nullable="true" length="64"
+                comment="Encoder Identity Digest"/>
+        <column xsi:type="text" name="impact_report" nullable="false" comment="Exact Cleanup Impact"/>
+        <column xsi:type="varchar" name="actor" nullable="false" length="255" comment="Actor"/>
+        <column xsi:type="varchar" name="last_error_class" nullable="true" length="255"
+                comment="Last Error Class"/>
+        <column xsi:type="varchar" name="last_diagnostic" nullable="true" length="1024"
+                comment="Bounded Diagnostic"/>
+        <column xsi:type="timestamp" name="created_at" nullable="false" default="CURRENT_TIMESTAMP"
+                comment="Created At"/>
+        <column xsi:type="timestamp" name="completed_at" nullable="true" comment="Completed At"/>
+        <constraint xsi:type="primary" referenceId="PRIMARY">
+            <column name="cleanup_id"/>
+        </constraint>
+        <constraint xsi:type="foreign" referenceId="MOS_HYB_CLEAN_STORE_FK"
+                    table="mageos_opensearch_hybrid_cleanup" column="store_id" referenceTable="store"
+                    referenceColumn="store_id" onDelete="CASCADE"/>
+        <index referenceId="MOS_HYB_CLEAN_STORE_CREATED_IDX" indexType="btree">
+            <column name="store_id"/>
+            <column name="created_at"/>
+        </index>
+        <index referenceId="MOS_HYB_CLEAN_GENERATION_IDX" indexType="btree">
+            <column name="generation_id"/>
+        </index>
+    </table>
+</schema>

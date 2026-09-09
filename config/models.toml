@@ -1,0 +1,89 @@
+schema_version = 1
+
+# Every revision is an immutable Hugging Face commit. Prefix keys are mandatory even when the
+# deliberate value is empty. Templates are rendered after the prefix.
+
+[models.gte_modernbert_base]
+hf_id = "Alibaba-NLP/gte-modernbert-base"
+revision = "e7f32e3c00f91d699e8c43b53106206bcc72bb22"
+dims = 768
+normalize = true
+max_seq_length = 512
+bulk_dtype = "float32"
+use_memory_efficient_attention = false
+trust_remote_code = false
+query_prefix = ""
+document_prefix = ""
+query_template = "{query}"
+document_template = "{title}. {description}. {attributes}"
+license = "Apache-2.0"
+decision_eligible = true
+contamination = "none_known"
+
+[models.granite_embedding_english_r2]
+hf_id = "ibm-granite/granite-embedding-english-r2"
+revision = "47ea694b257b703fee9253d75c2b1f2985180498"
+dims = 768
+normalize = true
+max_seq_length = 512
+bulk_dtype = "float32"
+use_memory_efficient_attention = false
+trust_remote_code = false
+query_prefix = ""
+document_prefix = ""
+query_template = "{query}"
+document_template = "{title}. {description}. {attributes}"
+license = "Apache-2.0"
+decision_eligible = true
+contamination = "none_known"
+
+[models.arctic_embed_m_v2]
+hf_id = "Snowflake/snowflake-arctic-embed-m-v2.0"
+revision = "95c2741480856aa9666782eb4afe11959938017f"
+dims = 256
+normalize = true
+max_seq_length = 512
+bulk_dtype = "float32"
+use_memory_efficient_attention = false
+trust_remote_code = true
+query_prefix = "query: "
+document_prefix = ""
+query_template = "{query}"
+document_template = "{title}. {description}. {attributes}"
+license = "Apache-2.0"
+decision_eligible = true
+contamination = "none_known"
+
+[models.embeddinggemma_300m]
+hf_id = "google/embeddinggemma-300m"
+revision = "57c266a740f537b4dc058e1b0cda161fd15afa75"
+dims = 512
+normalize = true
+max_seq_length = 512
+bulk_dtype = "float32"
+use_memory_efficient_attention = false
+trust_remote_code = false
+query_prefix = "task: search result | query: "
+document_prefix = "title: "
+query_template = "{query}"
+document_template = "{title} | text: {description}. {attributes}"
+license = "Gemma-Terms"
+decision_eligible = false
+contamination = "none_known"
+
+[models.esci_minilm]
+hf_id = "metarank/esci-MiniLM-L6-v2"
+revision = "a16d1d721e6fa8165fd89f2d8e2eb37374f73e1a"
+dims = 384
+normalize = true
+max_seq_length = 512
+bulk_dtype = "float32"
+use_memory_efficient_attention = false
+trust_remote_code = false
+query_prefix = ""
+document_prefix = ""
+query_template = "{query}"
+document_template = "{title}. {description}. {attributes}"
+license = "unknown_verify_before_use"
+decision_eligible = false
+contamination = "ESCI_fine_tuned_WANDS_only"

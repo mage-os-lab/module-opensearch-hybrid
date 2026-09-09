@@ -1,0 +1,77 @@
+name: opensearch-hybrid-os38
+
+services:
+  opensearch:
+    image: opensearchproject/opensearch:3.8.0
+    environment:
+      discovery.type: single-node
+      DISABLE_INSTALL_DEMO_CONFIG: "true"
+      DISABLE_SECURITY_PLUGIN: "true"
+      bootstrap.memory_lock: "true"
+      OPENSEARCH_JAVA_OPTS: "-Xms4g -Xmx4g"
+    ports:
+      - "127.0.0.1:9201:9200"
+      - "127.0.0.1:9601:9600"
+    volumes:
+      - opensearch-38-data:/usr/share/opensearch/data
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - curl --fail --silent 'http://localhost:9200/_cluster/health?wait_for_status=yellow&timeout=5s' >/dev/null
+      interval: 5s
+      timeout: 6s
+      retries: 60
+      start_period: 30s
+    restart: unless-stopped
+
+  ml-commons-package-server:
+    profiles: ["ml-commons"]
+    image: python:3.13.7-alpine3.22@sha256:9ba6d8cbebf0fb6546ae71f2a1c14f6ffd2fdab83af7fa5669734ef30ad48844
+    command:
+      - python
+      - -m
+      - http.server
+      - "8080"
+      - --bind
+      - 0.0.0.0
+      - --directory
+      - /srv/packages
+    expose:
+      - "8080"
+    volumes:
+      - type: bind
+        source: ./data/cache/models/ml-commons
+        target: /srv/packages
+        read_only: true
+    user: "65532:65532"
+    read_only: true
+    tmpfs:
+      - /tmp:size=16m,mode=1777
+    cap_drop:
+      - ALL
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 64
+    cpus: 0.5
+    mem_limit: 128m
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/', timeout=2).read(1)
+      interval: 2s
+      timeout: 3s
+      retries: 15
+      start_period: 2s
+    restart: "no"
+
+volumes:
+  opensearch-38-data:

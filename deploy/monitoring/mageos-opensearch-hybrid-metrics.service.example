@@ -1,0 +1,18 @@
+[Unit]
+Description=Mage-OS OpenSearch Hybrid durable metrics collector
+After=network-online.target
+
+[Service]
+Type=oneshot
+User=www-data
+Group=www-data
+Environment=MAGEOS_ROOT=@@MAGENTO_ROOT@@
+Environment=OPENMETRICS_TEXTFILE_DIRECTORY=@@NODE_EXPORTER_TEXTFILE_DIRECTORY@@
+Environment=OPENMETRICS_QUERY_WINDOW_SECONDS=300
+Environment=OPENMETRICS_QUERY_MAX_BYTES=5242880
+ExecStart=@@COLLECTOR_SCRIPT@@
+TimeoutStartSec=45s
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectHome=true
+ProtectSystem=full

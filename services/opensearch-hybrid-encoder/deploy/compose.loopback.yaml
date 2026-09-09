@@ -1,0 +1,4 @@
+services:
+  encoder:
+    ports:
+      - 127.0.0.1:${ENCODER_LOOPBACK_PORT:?Set an unused loopback port}:8080

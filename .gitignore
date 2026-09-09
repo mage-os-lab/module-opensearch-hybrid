@@ -1,0 +1,33 @@
+.DS_Store
+.env
+.venv/
+.uv-cache/
+.pytest_cache/
+.phpunit.cache/
+.ruff_cache/
+__pycache__/
+*.py[cod]
+/dist/
+/dev/sbom/tool/vendor/
+
+# Benchmark inputs and generated evidence. Keep manifests beside run files locally.
+data/raw/**
+data/prepared/**
+data/cache/**
+runs/**
+results/**
+
+# Preserve the directory contract without committing datasets or results.
+!data/raw/.gitkeep
+!data/prepared/.gitkeep
+!data/cache/.gitkeep
+!runs/.gitkeep
+!results/.gitkeep
+
+# Private study artifacts, research archives, and local working copies.
+/artifacts/
+/.worktrees/
+
+/vendor/
+/composer.lock
+.mypy_cache/

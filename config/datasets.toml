@@ -1,0 +1,64 @@
+schema_version = 1
+
+[datasets.wands]
+source = "https://github.com/wayfair/WANDS"
+revision = "3b74dcf4ba29ab8ff3e6a50b5b09fc627cb882b5"
+expected_products = 42994
+expected_queries = 480
+expected_judgments = 233448
+expected_unique_pairs = 231873
+expected_duplicate_pairs = 1467
+expected_conflicting_pairs = 14
+license = "MIT"
+primary_gain_mapping = "Exact=2,Partial=1,Irrelevant=0"
+duplicate_policy = "majority_vote_then_lower_gain_on_tie"
+# Frozen seed preserves the registered benchmark split across the project rename.
+split_seed = "rocket-search-wands-v1"
+
+[datasets.wands.files.product]
+filename = "product.csv"
+url = "https://raw.githubusercontent.com/wayfair/WANDS/3b74dcf4ba29ab8ff3e6a50b5b09fc627cb882b5/dataset/product.csv"
+sha256 = "d993926254572e6eba96c8fd87cc549a17fb91ad3748308036eee4cf92b10ac6"
+bytes = 90621131
+
+[datasets.wands.files.query]
+filename = "query.csv"
+url = "https://raw.githubusercontent.com/wayfair/WANDS/3b74dcf4ba29ab8ff3e6a50b5b09fc627cb882b5/dataset/query.csv"
+sha256 = "63b61660560fecc33ec490804c7e2b81402ee3e7c31a9cbb5e03736639f68e95"
+bytes = 19942
+
+[datasets.wands.files.label]
+filename = "label.csv"
+url = "https://raw.githubusercontent.com/wayfair/WANDS/3b74dcf4ba29ab8ff3e6a50b5b09fc627cb882b5/dataset/label.csv"
+sha256 = "c11fe81ad62f17f56f316b0ec9630ebe8fbe1393578cb0ca4f05c17253a180ef"
+bytes = 5736234
+
+[datasets.trec_product_search_2024]
+source = "https://huggingface.co/trec-product-search"
+revision = "2d39a0a369995216d464c32c631633af64770ce0"
+expected_products = 1118658
+expected_queries = 117
+expected_judged_queries = 80
+expected_judgments = 33020
+expected_unique_judged_products = 30877
+license = "Apache-2.0 corpus; NIST topics and qrels"
+primary_gain_mapping = "qrels_as_distributed"
+query_authority = "NIST 117-topic file; the Hugging Face viewer copy exposes 116 rows"
+
+[datasets.trec_product_search_2024.files.corpus]
+filename = "collection.trec.gz"
+url = "https://huggingface.co/datasets/trec-product-search/product-search-corpus/resolve/2d39a0a369995216d464c32c631633af64770ce0/data/trec/collection.trec.gz"
+sha256 = "f1faad5bb7d8e49ffa4240b217ef6c32e74f5cee2f8510a1e2638c3dcba399bf"
+bytes = 568098976
+
+[datasets.trec_product_search_2024.files.queries]
+filename = "2024-test-queries.tsv"
+url = "https://trec.nist.gov/data/product/2024-test-queries.tsv"
+sha256 = "a71780bbb3efe63f9c5ff2d9dbea949ebed8e882d8517a0c84c56584fad16bac"
+bytes = 3724
+
+[datasets.trec_product_search_2024.files.qrels]
+filename = "2024-qrels.txt"
+url = "https://trec.nist.gov/data/product/2024-qrels.txt"
+sha256 = "cf0a662419d8a308a39c6b14ef6cb0de5b88c892bb1b035e9a4b5f83953ae680"
+bytes = 606172

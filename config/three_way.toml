@@ -1,0 +1,23 @@
+schema_version = 1
+index_name = "opensearch-hybrid-wands-dense-sparse-v1"
+dense_model = "arctic_embed_m_v2"
+
+[[fusion.candidates]]
+name = "balanced_low_lexical"
+weights = [0.2, 0.4, 0.4]
+
+[[fusion.candidates]]
+name = "balanced_registered_lexical"
+weights = [0.3, 0.35, 0.35]
+
+[[fusion.candidates]]
+name = "balanced_high_lexical"
+weights = [0.4, 0.3, 0.3]
+
+[[fusion.candidates]]
+name = "dense_heavy"
+weights = [0.3, 0.5, 0.2]
+
+[[fusion.candidates]]
+name = "sparse_heavy"
+weights = [0.3, 0.2, 0.5]

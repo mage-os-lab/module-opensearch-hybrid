@@ -1,0 +1,26 @@
+schema_version = 1
+
+[indexes.smoke]
+name = "opensearch-hybrid-smoke-v1"
+shards = 1
+replicas = 0
+vector_dims = 32
+engine = "lucene"
+space_type = "cosinesimil"
+
+[indexes.wands]
+name = "opensearch-hybrid-wands-v1"
+shards = 1
+replicas = 0
+engine = "lucene"
+vector_storage = "fp32"
+model_layout = "one_field_per_model"
+
+[indexes.trec_product_search_2024]
+name_prefix = "opensearch-hybrid-trec-ps-2024"
+shards = 1
+replicas = 0
+engine = "faiss"
+space_type = "cosinesimil"
+vector_storage = "fp16"
+model_layout = "one_index_per_promoted_model"

@@ -1,0 +1,304 @@
+groups:
+  - name: mageos-opensearch-hybrid
+    rules:
+      - alert: MageOSOpenSearchHybridMetricsStale
+        expr: >-
+          absent(mageos_opensearch_hybrid_snapshot_generated_timestamp_seconds)
+          or (time() - mageos_opensearch_hybrid_snapshot_generated_timestamp_seconds > 180)
+        for: 2m
+        labels:
+          severity: high
+        annotations:
+          summary: Mage-OS OpenSearch Hybrid durable metrics are stale
+
+      - alert: MageOSOpenSearchHybridDurableAlert
+        expr: mageos_opensearch_hybrid_alert{severity=~"high|critical"} > 0
+        for: 1m
+        annotations:
+          summary: Mage-OS OpenSearch Hybrid reports a durable high-severity condition
+
+      - alert: MageOSOpenSearchHybridActiveStoreNotReady
+        expr: mageos_opensearch_hybrid_readiness{activation_mode="HYBRID"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: An active Mage-OS OpenSearch Hybrid store is not ready
+
+      - alert: MageOSOpenSearchHybridDeadWork
+        expr: mageos_opensearch_hybrid_work_jobs{state="DEAD"} > 0
+        for: 1m
+        labels:
+          severity: high
+        annotations:
+          summary: Mage-OS OpenSearch Hybrid has dead work requiring explicit replay
+
+      - alert: MageOSOpenSearchHybridUnresolvedHandoffFailure
+        expr: mageos_opensearch_hybrid_subscription_trace_unresolved_failure_total > 0
+        for: 1m
+        labels:
+          severity: high
+        annotations:
+          summary: A Mage-OS Async Events handoff remains failed
+
+      - alert: MageOSOpenSearchHybridTraceRetentionUnbounded
+        expr: mageos_opensearch_hybrid_async_event_trace_retention_bounded == 0
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: Mage-OS Async Events trace retention is not bounded
+
+      - alert: MageOSOpenSearchHybridQueryMetricsStale
+        expr: >-
+          mageos_opensearch_hybrid_query_collection_enabled == 1
+          and on()
+          (absent(mageos_opensearch_hybrid_query_snapshot_generated_timestamp_seconds)
+          or (time() - mageos_opensearch_hybrid_query_snapshot_generated_timestamp_seconds > 180))
+        for: 2m
+        labels:
+          severity: high
+        annotations:
+          summary: Mage-OS OpenSearch Hybrid query metrics are stale
+
+      - alert: MageOSOpenSearchHybridQueryWindowIncomplete
+        expr: mageos_opensearch_hybrid_query_window_complete == 0
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: Mage-OS OpenSearch Hybrid query metrics do not cover the configured window
+
+      - alert: MageOSOpenSearchHybridQueryFallbackRateHigh
+        expr: >-
+          mageos_opensearch_hybrid_query_window_fallback_ratio > 0.05
+          and on(store_id, request_name)
+          mageos_opensearch_hybrid_query_window_requests >= 20
+        for: 5m
+        labels:
+          severity: high
+        annotations:
+          summary: Mage-OS OpenSearch Hybrid query fallback rate is above five percent
+
+      - alert: MageOSOpenSearchHybridQueryLatencyHigh
+        expr: >-
+          mageos_opensearch_hybrid_query_window_p95_duration_milliseconds{route="hybrid"} > 200
+          and on(store_id, request_name)
+          mageos_opensearch_hybrid_query_window_requests >= 20
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: Mage-OS OpenSearch Hybrid query p95 is above 200 milliseconds
+
+      - alert: MageOSOpenSearchHybridEncoderUnavailable
+        expr: up{job="mageos-opensearch-hybrid-encoder"} == 0
+        for: 2m
+        labels:
+          severity: high
+        annotations:
+          summary: A Mage-OS OpenSearch Hybrid encoder target is unavailable
+
+      - alert: MageOSOpenSearchHybridEncoderIdentityMissing
+        expr: >-
+          (up{job="mageos-opensearch-hybrid-encoder"} == 1
+          unless on(job, instance)
+          mageos_opensearch_hybrid_encoder_identity_info)
+          or
+          (count by(job, instance) (mageos_opensearch_hybrid_encoder_identity_info) > 1)
+        for: 2m
+        labels:
+          severity: high
+        annotations:
+          summary: A Mage-OS OpenSearch Hybrid encoder target has no unique identity metric
+
+      - alert: MageOSOpenSearchHybridEncoderNotProductionEligible
+        expr: >-
+          mageos_opensearch_hybrid_encoder_identity_info{production_eligible!="true"} == 1
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: A Mage-OS OpenSearch Hybrid encoder target is not production eligible
+
+      - alert: MageOSOpenSearchHybridEncoderRuntimeErrorRateHigh
+        expr: >-
+          (sum by(job, instance, route)
+          (increase(mageos_opensearch_hybrid_encoder_requests_total{outcome="runtime_error"}[5m]))
+          / clamp_min(sum by(job, instance, route)
+          (increase(mageos_opensearch_hybrid_encoder_requests_total[5m])), 1)) > 0.01
+          and on(job, instance, route)
+          sum by(job, instance, route)
+          (increase(mageos_opensearch_hybrid_encoder_requests_total[5m])) >= 20
+        for: 5m
+        labels:
+          severity: high
+        annotations:
+          summary: Mage-OS OpenSearch Hybrid encoder runtime errors exceed one percent
+
+      - alert: MageOSOpenSearchHybridEncoderSaturated
+        expr: >-
+          (mageos_opensearch_hybrid_encoder_inflight_requests
+          / on(job, instance)
+          clamp_min(mageos_opensearch_hybrid_encoder_concurrency_limit, 1)) >= 0.9
+          and on(job, instance)
+          up{job="mageos-opensearch-hybrid-encoder"} == 1
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: A Mage-OS OpenSearch Hybrid encoder target is persistently saturated
+
+      - alert: MageOSOpenSearchHybridOpenSearchUnavailable
+        expr: up{job="mageos-opensearch-hybrid-opensearch"} == 0
+        for: 2m
+        labels:
+          severity: high
+        annotations:
+          summary: A Mage-OS OpenSearch Hybrid OpenSearch target is unavailable
+
+      - alert: MageOSOpenSearchHybridOpenSearchClusterRed
+        expr: opensearch_cluster_status{job="mageos-opensearch-hybrid-opensearch"} == 2
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: A Mage-OS OpenSearch Hybrid OpenSearch cluster is red
+
+      - alert: MageOSOpenSearchHybridOpenSearchClusterYellow
+        expr: opensearch_cluster_status{job="mageos-opensearch-hybrid-opensearch"} == 1
+        for: 15m
+        labels:
+          severity: warning
+        annotations:
+          summary: A Mage-OS OpenSearch Hybrid OpenSearch cluster remains yellow
+
+      - alert: MageOSOpenSearchHybridOpenSearchJVMHeapHigh
+        expr: >-
+          opensearch_jvm_mem_heap_used_percent{job="mageos-opensearch-hybrid-opensearch"} > 85
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: A Mage-OS OpenSearch Hybrid OpenSearch node has sustained high JVM heap use
+
+      - alert: MageOSOpenSearchHybridOpenSearchDiskHigh
+        expr: >-
+          max by(job, instance, cluster, node)
+          ((1 - (opensearch_fs_path_available_bytes{job="mageos-opensearch-hybrid-opensearch"}
+          / opensearch_fs_path_total_bytes{job="mageos-opensearch-hybrid-opensearch"})) * 100) > 90
+        for: 5m
+        labels:
+          severity: high
+        annotations:
+          summary: A Mage-OS OpenSearch Hybrid OpenSearch data path exceeds 90 percent disk use
+
+      - alert: MageOSOpenSearchHybridOpenSearchCircuitBreakerTrips
+        expr: >-
+          increase(opensearch_circuitbreaker_tripped_count{job="mageos-opensearch-hybrid-opensearch"}[5m]) > 0
+        for: 1m
+        labels:
+          severity: high
+        annotations:
+          summary: A Mage-OS OpenSearch Hybrid OpenSearch circuit breaker has tripped
+
+      - alert: MageOSOpenSearchHybridOpenSearchShardAllocationRestricted
+        expr: >-
+          opensearch_cluster_routing_allocation_enabled{job="mageos-opensearch-hybrid-opensearch"} != 0
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: Mage-OS OpenSearch Hybrid OpenSearch shard allocation is restricted
+
+      - alert: MageOSOpenSearchHybridRabbitMQUnavailable
+        expr: >-
+          up{job=~"mageos-opensearch-hybrid-rabbitmq(-queues)?"} == 0
+        for: 2m
+        labels:
+          severity: high
+        annotations:
+          summary: A Mage-OS OpenSearch Hybrid RabbitMQ metrics target is unavailable
+
+      - alert: MageOSOpenSearchHybridRabbitMQQueueMissing
+        expr: >-
+          up{job="mageos-opensearch-hybrid-rabbitmq-queues"} == 1
+          unless on(job, instance)
+          rabbitmq_detailed_queue_consumers{
+          job="mageos-opensearch-hybrid-rabbitmq-queues",
+          queue="mageos.opensearch_hybrid.embedding"}
+        for: 2m
+        labels:
+          queue: mageos.opensearch_hybrid.embedding
+          severity: critical
+        annotations:
+          summary: A required Mage-OS OpenSearch Hybrid RabbitMQ queue is missing
+
+      - alert: MageOSOpenSearchHybridRabbitMQQueueMissing
+        expr: >-
+          up{job="mageos-opensearch-hybrid-rabbitmq-queues"} == 1
+          unless on(job, instance)
+          rabbitmq_detailed_queue_consumers{
+          job="mageos-opensearch-hybrid-rabbitmq-queues",
+          queue="mageos.opensearch_hybrid.correctness_priority"}
+        for: 2m
+        labels:
+          queue: mageos.opensearch_hybrid.correctness_priority
+          severity: critical
+        annotations:
+          summary: A required Mage-OS OpenSearch Hybrid RabbitMQ queue is missing
+
+      - alert: MageOSOpenSearchHybridRabbitMQConsumerMissing
+        expr: >-
+          rabbitmq_detailed_queue_consumers{
+          job="mageos-opensearch-hybrid-rabbitmq-queues",
+          queue=~"mageos\\.opensearch_hybrid\\.(embedding|correctness_priority)"} == 0
+        for: 2m
+        labels:
+          severity: high
+        annotations:
+          summary: A Mage-OS OpenSearch Hybrid RabbitMQ processing queue has no consumer
+
+      - alert: MageOSOpenSearchHybridRabbitMQPriorityWorkOld
+        expr: >-
+          time() - rabbitmq_detailed_queue_head_message_timestamp{
+          job="mageos-opensearch-hybrid-rabbitmq-queues",
+          queue="mageos.opensearch_hybrid.correctness_priority"} > 120
+        for: 2m
+        labels:
+          severity: critical
+        annotations:
+          summary: Mage-OS OpenSearch Hybrid correctness-priority work is older than two minutes
+
+      - alert: MageOSOpenSearchHybridRabbitMQEmbeddingWorkOld
+        expr: >-
+          time() - rabbitmq_detailed_queue_head_message_timestamp{
+          job="mageos-opensearch-hybrid-rabbitmq-queues",
+          queue="mageos.opensearch_hybrid.embedding"} >= 900
+        for: 5m
+        labels:
+          severity: high
+        annotations:
+          summary: Mage-OS OpenSearch Hybrid embedding work is older than fifteen minutes
+
+      - alert: MageOSOpenSearchHybridRabbitMQDeadLettered
+        expr: >-
+          rabbitmq_detailed_queue_messages{
+          job="mageos-opensearch-hybrid-rabbitmq-queues",
+          queue=~"mageos\\.opensearch_hybrid\\.(embedding\\.dead|correctness_priority\\.dead)"} > 0
+        for: 1m
+        labels:
+          severity: high
+        annotations:
+          summary: Mage-OS OpenSearch Hybrid RabbitMQ dead-letter work requires review
+
+      - alert: MageOSOpenSearchHybridRabbitMQRedeliveryBurst
+        expr: >-
+          increase(rabbitmq_detailed_queue_messages_redelivered_total{
+          job="mageos-opensearch-hybrid-rabbitmq-queues",
+          queue=~"mageos\\.opensearch_hybrid\\.(embedding|correctness_priority)"}[5m]) >= 5
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: Mage-OS OpenSearch Hybrid RabbitMQ redeliveries are elevated

@@ -1,0 +1,89 @@
+{
+  "name": "mage-os/module-opensearch-hybrid",
+  "description": "Customer-owned dense hybrid search for Mage-OS 3.4 and OpenSearch 3.8.x",
+  "type": "magento2-module",
+  "license": [
+    "OSL-3.0",
+    "AFL-3.0"
+  ],
+  "require": {
+    "php": "~8.4.0||~8.5.0",
+    "mage-os/module-backend": "3.4.*",
+    "mage-os/framework": "3.4.*",
+    "mage-os/module-advanced-search": "3.4.*",
+    "mage-os/module-catalog": "3.4.*",
+    "mage-os/module-catalog-search": "3.4.*",
+    "mage-os/module-config": "3.4.*",
+    "mage-os/module-elasticsearch": "3.4.*",
+    "mage-os/module-eav": "3.4.*",
+    "mage-os/module-inventory-catalog": "3.4.*",
+    "mage-os/module-inventory-catalog-api": "3.4.*",
+    "mage-os/module-inventory-catalog-search": "3.4.*",
+    "mage-os/module-inventory-indexer": "3.4.*",
+    "mage-os/module-inventory-sales-api": "3.4.*",
+    "mage-os/module-open-search": "3.4.*",
+    "mage-os/module-search": "3.4.*",
+    "mage-os/module-store": "3.4.*",
+    "mage-os/mageos-async-events": "^4.0.8"
+  },
+  "suggest": {
+    "mage-os/mageos-async-events-admin-ui": "Provides subscription administration alongside module status",
+    "mage-os/mageos-common-async-events": "Provides fast catalog product create and update signals"
+  },
+  "autoload": {
+    "files": [
+      "registration.php"
+    ],
+    "psr-4": {
+      "MageOS\\OpenSearchHybrid\\": ""
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "MageOS\\OpenSearchHybrid\\Test\\": "Test/"
+    }
+  },
+  "config": {
+    "sort-packages": true
+  },
+  "homepage": "https://github.com/mage-os-lab/module-opensearch-hybrid",
+  "archive": {
+    "exclude": [
+      "/.github",
+      "/.venv",
+      "/.uv-cache",
+      "/.pytest_cache",
+      "/.ruff_cache",
+      "/.mypy_cache",
+      "/artifacts",
+      "/config",
+      "/data",
+      "/dist",
+      "/poc",
+      "/results",
+      "/runs",
+      "/scripts",
+      "/services",
+      "/tests",
+      "/.worktrees",
+      "/.env",
+      "/.gitignore",
+      "/.python-version",
+      "/Makefile",
+      "/pyproject.toml",
+      "/uv.lock",
+      "/composer.lock",
+      "/docker-compose.yml",
+      "/compose.bench.yml",
+      "/compose.opensearch-2.19.yml",
+      "/vendor",
+      "/.git",
+      "/.phpunit.cache",
+      "/dev/sbom/tool/vendor",
+      "**/__pycache__",
+      "**/*.pyc",
+      "**/*.pyo",
+      "**/.DS_Store"
+    ]
+  }
+}

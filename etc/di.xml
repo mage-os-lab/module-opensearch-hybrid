@@ -1,0 +1,319 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="urn:magento:framework:ObjectManager/etc/config.xsd">
+    <preference for="MageOS\OpenSearchHybrid\Api\JobPayloadInterface"
+                type="MageOS\OpenSearchHybrid\Model\AsyncEvent\JobPayload"/>
+    <preference for="MageOS\OpenSearchHybrid\Api\QueryEncoderInterface"
+                type="MageOS\OpenSearchHybrid\Model\Encoder\HttpQueryEncoder"/>
+    <preference for="MageOS\OpenSearchHybrid\Api\DocumentEncoderInterface"
+                type="MageOS\OpenSearchHybrid\Model\Encoder\HttpDocumentEncoder"/>
+    <preference for="MageOS\OpenSearchHybrid\Api\EmbeddingStoreInterface"
+                type="MageOS\OpenSearchHybrid\Model\Embedding\EmbeddingStore"/>
+    <preference for="MageOS\OpenSearchHybrid\Api\SimilarityServiceInterface"
+                type="MageOS\OpenSearchHybrid\Model\Similarity\SimilarityService"/>
+
+    <type name="MageOS\OpenSearchHybrid\Model\Operations\QueryTelemetry">
+        <arguments>
+            <argument name="logger" xsi:type="object">MageOS\OpenSearchHybrid\Logger\QueryTelemetry</argument>
+        </arguments>
+    </type>
+    <type name="MageOS\OpenSearchHybrid\Model\Operations\SimilarityTelemetry">
+        <arguments>
+            <argument name="logger" xsi:type="object">MageOS\OpenSearchHybrid\Logger\QueryTelemetry</argument>
+        </arguments>
+    </type>
+
+    <type name="Magento\Search\Model\Adminhtml\System\Config\Source\Engine">
+        <arguments>
+            <argument name="engines" xsi:type="array">
+                <item name="mageos_opensearch_hybrid" xsi:type="string" sortOrder="50">OpenSearch Hybrid</item>
+            </argument>
+        </arguments>
+    </type>
+    <type name="Magento\Search\Model\EngineResolver">
+        <arguments>
+            <argument name="engines" xsi:type="array">
+                <item name="mageos_opensearch_hybrid" xsi:type="string">mageos_opensearch_hybrid</item>
+            </argument>
+        </arguments>
+    </type>
+    <type name="Magento\Search\Model\AdapterFactory">
+        <arguments>
+            <argument name="adapters" xsi:type="array">
+                <item name="mageos_opensearch_hybrid" xsi:type="string">MageOS\OpenSearchHybrid\SearchAdapter\Adapter</item>
+            </argument>
+        </arguments>
+    </type>
+    <type name="Magento\Search\Model\Search\PageSizeProvider">
+        <arguments>
+            <argument name="pageSizeBySearchEngine" xsi:type="array">
+                <item name="mageos_opensearch_hybrid" xsi:type="number">10000</item>
+            </argument>
+        </arguments>
+    </type>
+
+    <type name="Magento\Elasticsearch\Model\Config">
+        <arguments>
+            <argument name="prefix" xsi:type="string">opensearch</argument>
+            <argument name="engineList" xsi:type="array">
+                <item name="mageos_opensearch_hybrid" xsi:type="string">mageos_opensearch_hybrid</item>
+            </argument>
+        </arguments>
+    </type>
+    <type name="Magento\AdvancedSearch\Model\Client\ClientResolver">
+        <arguments>
+            <argument name="clientFactories" xsi:type="array">
+                <item name="mageos_opensearch_hybrid" xsi:type="string">Magento\OpenSearch\Model\Client\OpenSearchFactory</item>
+            </argument>
+            <argument name="clientOptions" xsi:type="array">
+                <item name="mageos_opensearch_hybrid" xsi:type="string">Magento\Elasticsearch\Model\Config</item>
+            </argument>
+        </arguments>
+    </type>
+    <type name="Magento\Elasticsearch\Elasticsearch5\Model\Client\ClientFactoryProxy">
+        <arguments>
+            <argument name="clientFactories" xsi:type="array">
+                <item name="mageos_opensearch_hybrid" xsi:type="object">Magento\OpenSearch\Model\Client\OpenSearchFactory</item>
+            </argument>
+        </arguments>
+    </type>
+
+    <type name="Magento\CatalogSearch\Model\Indexer\IndexerHandlerFactory">
+        <arguments>
+            <argument name="handlers" xsi:type="array">
+                <item name="mageos_opensearch_hybrid" xsi:type="string">Magento\Elasticsearch\Model\Indexer\IndexerHandler</item>
+            </argument>
+        </arguments>
+    </type>
+    <type name="Magento\CatalogSearch\Model\Indexer\IndexStructureFactory">
+        <arguments>
+            <argument name="structures" xsi:type="array">
+                <item name="mageos_opensearch_hybrid" xsi:type="string">Magento\Elasticsearch\Model\Indexer\IndexStructure</item>
+            </argument>
+        </arguments>
+    </type>
+    <type name="Magento\Catalog\Model\ResourceModel\Product">
+        <plugin name="mageos_opensearch_hybrid_product_capture"
+                type="MageOS\OpenSearchHybrid\Plugin\ProductChangeCapture"
+                sortOrder="10"/>
+    </type>
+    <type name="Magento\Catalog\Model\ResourceModel\Product\Action">
+        <plugin name="mageos_opensearch_hybrid_bulk_attribute_capture"
+                type="MageOS\OpenSearchHybrid\Plugin\BulkAttributeChangeCapture"
+                sortOrder="10"/>
+    </type>
+    <type name="Magento\Catalog\Model\Product\Website">
+        <plugin name="mageos_opensearch_hybrid_product_website_capture"
+                type="MageOS\OpenSearchHybrid\Plugin\ProductWebsiteChangeCapture"
+                sortOrder="10"/>
+    </type>
+    <type name="Magento\InventoryApi\Api\SourceItemsSaveInterface">
+        <plugin name="mageos_opensearch_hybrid_source_item_capture"
+                type="MageOS\OpenSearchHybrid\Plugin\SourceItemsSaveCapture"
+                sortOrder="-100"/>
+    </type>
+    <type name="Magento\InventoryApi\Api\SourceRepositoryInterface">
+        <plugin name="mageos_opensearch_hybrid_source_status_topology_capture"
+                type="MageOS\OpenSearchHybrid\Plugin\SourceStatusTopologyCapture"
+                sortOrder="20"/>
+    </type>
+    <type name="Magento\InventorySalesApi\Model\ReplaceSalesChannelsForStockInterface">
+        <plugin name="mageos_opensearch_hybrid_stock_sales_channel_topology_capture"
+                type="MageOS\OpenSearchHybrid\Plugin\StockSalesChannelTopologyCapture"
+                sortOrder="-100"/>
+    </type>
+    <type name="Magento\InventoryApi\Api\StockSourceLinksSaveInterface">
+        <plugin name="mageos_opensearch_hybrid_stock_source_links_save_topology_capture"
+                type="MageOS\OpenSearchHybrid\Plugin\StockSourceLinksSaveTopologyCapture"
+                sortOrder="20"/>
+    </type>
+    <type name="Magento\InventoryApi\Api\StockSourceLinksDeleteInterface">
+        <plugin name="mageos_opensearch_hybrid_stock_source_links_delete_topology_capture"
+                type="MageOS\OpenSearchHybrid\Plugin\StockSourceLinksDeleteTopologyCapture"
+                sortOrder="20"/>
+    </type>
+    <type name="Magento\InventoryCatalogSearch\Model\UpdateFulltextIndexOnProductSalabilityChange">
+        <plugin name="mageos_opensearch_hybrid_inventory_sku_capture"
+                type="MageOS\OpenSearchHybrid\Plugin\InventorySalabilityChangeCapture"
+                sortOrder="10"/>
+    </type>
+    <type name="Magento\InventoryIndexer\Model\Queue\UpdateIndexSalabilityStatus">
+        <plugin name="mageos_opensearch_hybrid_reservation_salability_capture"
+                type="MageOS\OpenSearchHybrid\Plugin\ReservationSalabilityChangeCapture"
+                sortOrder="10"/>
+    </type>
+    <type name="Magento\Catalog\Model\Indexer\Product\Price">
+        <plugin name="mageos_opensearch_hybrid_price_index_capture"
+                type="MageOS\OpenSearchHybrid\Plugin\PriceIndexChangeCapture"
+                sortOrder="10"/>
+    </type>
+    <type name="Magento\Catalog\Model\ResourceModel\Category">
+        <plugin name="mageos_opensearch_hybrid_category_capture"
+                type="MageOS\OpenSearchHybrid\Plugin\CategoryChangeCapture"
+                sortOrder="10"/>
+    </type>
+    <type name="Magento\Eav\Model\ResourceModel\Entity\Attribute">
+        <plugin name="mageos_opensearch_hybrid_attribute_option_capture"
+                type="MageOS\OpenSearchHybrid\Plugin\AttributeOptionChangeCapture"
+                sortOrder="10"/>
+    </type>
+    <type name="Magento\CatalogSearch\Model\Indexer\Fulltext">
+        <plugin name="mageos_opensearch_hybrid_native_acknowledgement"
+                type="MageOS\OpenSearchHybrid\Plugin\NativeIndexerAcknowledgement"
+                sortOrder="10"/>
+    </type>
+    <type name="Magento\Config\Model\ResourceModel\Config\Data">
+        <plugin name="mageos_opensearch_hybrid_configuration_capture"
+                type="MageOS\OpenSearchHybrid\Plugin\ConfigurationChangeCapture"
+                sortOrder="10"/>
+    </type>
+    <type name="Magento\Store\Model\ResourceModel\Store">
+        <plugin name="mageos_opensearch_hybrid_store_definition_capture"
+                type="MageOS\OpenSearchHybrid\Plugin\StoreDefinitionChangeCapture"
+                sortOrder="10"/>
+    </type>
+    <type name="Magento\Store\Model\ResourceModel\Website">
+        <plugin name="mageos_opensearch_hybrid_website_definition_capture"
+                type="MageOS\OpenSearchHybrid\Plugin\StoreDefinitionChangeCapture"
+                sortOrder="10"/>
+    </type>
+    <type name="Magento\Store\Model\ResourceModel\Group">
+        <plugin name="mageos_opensearch_hybrid_store_group_definition_capture"
+                type="MageOS\OpenSearchHybrid\Plugin\StoreDefinitionChangeCapture"
+                sortOrder="10"/>
+    </type>
+    <type name="Magento\CatalogSearch\Model\ResourceModel\EngineProvider">
+        <arguments>
+            <argument name="engines" xsi:type="array">
+                <item name="mageos_opensearch_hybrid" xsi:type="string">Magento\Elasticsearch\Model\ResourceModel\Engine</item>
+            </argument>
+        </arguments>
+    </type>
+
+    <type name="Magento\Elasticsearch\Elasticsearch5\Model\Adapter\BatchDataMapper\CategoryFieldsProviderProxy">
+        <arguments>
+            <argument name="categoryFieldsProviders" xsi:type="array">
+                <item name="mageos_opensearch_hybrid" xsi:type="object">Magento\Elasticsearch\Elasticsearch5\Model\Adapter\BatchDataMapper\CategoryFieldsProvider</item>
+            </argument>
+        </arguments>
+    </type>
+    <type name="Magento\Elasticsearch\Elasticsearch5\Model\Adapter\FieldMapper\ProductFieldMapperProxy">
+        <arguments>
+            <argument name="productFieldMappers" xsi:type="array">
+                <item name="mageos_opensearch_hybrid" xsi:type="object">Magento\OpenSearch\Model\Adapter\FieldMapper\ProductFieldMapper</item>
+            </argument>
+        </arguments>
+    </type>
+    <type name="Magento\Framework\Search\Dynamic\IntervalFactory">
+        <arguments>
+            <argument name="intervals" xsi:type="array">
+                <item name="mageos_opensearch_hybrid" xsi:type="string">Magento\Elasticsearch\Elasticsearch5\SearchAdapter\Aggregation\Interval</item>
+            </argument>
+        </arguments>
+    </type>
+    <type name="Magento\Framework\Search\Dynamic\DataProviderFactory">
+        <arguments>
+            <argument name="dataProviders" xsi:type="array">
+                <item name="mageos_opensearch_hybrid" xsi:type="string">Magento\Elasticsearch\SearchAdapter\Dynamic\DataProvider</item>
+            </argument>
+        </arguments>
+    </type>
+    <type name="Magento\AdvancedSearch\Model\SuggestedQueries">
+        <arguments>
+            <argument name="data" xsi:type="array">
+                <item name="mageos_opensearch_hybrid" xsi:type="string">Magento\OpenSearch\Model\DataProvider\Suggestions</item>
+            </argument>
+        </arguments>
+    </type>
+
+    <type name="Magento\CatalogSearch\Model\Search\ItemCollectionProvider">
+        <arguments>
+            <argument name="factories" xsi:type="array">
+                <item name="mageos_opensearch_hybrid" xsi:type="object">elasticsearchAdvancedCollectionFactory</item>
+            </argument>
+        </arguments>
+    </type>
+    <type name="Magento\CatalogSearch\Model\Advanced\ProductCollectionPrepareStrategyProvider">
+        <arguments>
+            <argument name="strategies" xsi:type="array">
+                <item name="mageos_opensearch_hybrid" xsi:type="object">Magento\Elasticsearch\Model\Advanced\ProductCollectionPrepareStrategy</item>
+            </argument>
+        </arguments>
+    </type>
+    <virtualType name="elasticsearchLayerCategoryItemCollectionProvider"
+                 type="Magento\Elasticsearch\Model\Layer\Category\ItemCollectionProvider">
+        <arguments>
+            <argument name="factories" xsi:type="array">
+                <item name="mageos_opensearch_hybrid" xsi:type="object">elasticsearchCategoryCollectionFactory</item>
+            </argument>
+        </arguments>
+    </virtualType>
+    <virtualType name="elasticsearchLayerSearchItemCollectionProvider"
+                 type="Magento\Elasticsearch\Model\Layer\Search\ItemCollectionProvider">
+        <arguments>
+            <argument name="factories" xsi:type="array">
+                <item name="mageos_opensearch_hybrid" xsi:type="object">elasticsearchFulltextSearchCollectionFactory</item>
+            </argument>
+        </arguments>
+    </virtualType>
+
+    <type name="MageOS\AsyncEvents\Service\AsyncEvent\NotifierFactory">
+        <arguments>
+            <argument name="notifierClasses" xsi:type="array">
+                <item name="mageos_opensearch_hybrid" xsi:type="object">MageOS\OpenSearchHybrid\Model\AsyncEvent\HandoffNotifier</item>
+            </argument>
+        </arguments>
+    </type>
+    <type name="MageOS\AsyncEvents\Api\AsyncEventRepositoryInterface">
+        <plugin name="mageos_opensearch_hybrid_subscription_save_guard"
+                type="MageOS\OpenSearchHybrid\Plugin\AsyncEventMutationGuard" sortOrder="10"/>
+    </type>
+    <type name="MageOS\AsyncEvents\Model\ResourceModel\AsyncEvent">
+        <plugin name="mageos_opensearch_hybrid_subscription_delete_guard"
+                type="MageOS\OpenSearchHybrid\Plugin\AsyncEventMutationGuard" sortOrder="10"/>
+    </type>
+
+    <type name="MageOS\OpenSearchHybrid\SearchAdapter\Adapter">
+        <arguments>
+            <argument name="nativeAdapter" xsi:type="object">MageOS\OpenSearchHybrid\SearchAdapter\NativeAdapter</argument>
+        </arguments>
+    </type>
+    <type name="MageOS\OpenSearchHybrid\SearchAdapter\HybridExecutor">
+        <arguments>
+            <argument name="nativeAdapter" xsi:type="object">MageOS\OpenSearchHybrid\SearchAdapter\NativeAdapter</argument>
+        </arguments>
+    </type>
+    <virtualType name="MageOS\OpenSearchHybrid\SearchAdapter\NativeAdapter"
+                 type="Magento\OpenSearch\SearchAdapter\Adapter"/>
+
+    <type name="Magento\Config\Model\Config\TypePool">
+        <arguments>
+            <argument name="sensitive" xsi:type="array">
+                <item name="mageos_opensearch_hybrid/encoder/api_token" xsi:type="string">1</item>
+            </argument>
+            <argument name="environment" xsi:type="array">
+                <item name="mageos_opensearch_hybrid/encoder/endpoint" xsi:type="string">1</item>
+                <item name="mageos_opensearch_hybrid/encoder/allowed_hosts" xsi:type="string">1</item>
+                <item name="mageos_opensearch_hybrid/encoder/api_token" xsi:type="string">1</item>
+            </argument>
+        </arguments>
+    </type>
+    <type name="Magento\Framework\Console\CommandList">
+        <arguments>
+            <argument name="commands" xsi:type="array">
+                <item name="mageos_opensearch_hybrid_build" xsi:type="object">MageOS\OpenSearchHybrid\Console\BuildCommand</item>
+                <item name="mageos_opensearch_hybrid_status" xsi:type="object">MageOS\OpenSearchHybrid\Console\StatusCommand</item>
+                <item name="mageos_opensearch_hybrid_validate" xsi:type="object">MageOS\OpenSearchHybrid\Console\ValidateCommand</item>
+                <item name="mageos_opensearch_hybrid_events_install" xsi:type="object">MageOS\OpenSearchHybrid\Console\EventsInstallCommand</item>
+                <item name="mageos_opensearch_hybrid_doctor" xsi:type="object">MageOS\OpenSearchHybrid\Console\DoctorCommand</item>
+                <item name="mageos_opensearch_hybrid_activate" xsi:type="object">MageOS\OpenSearchHybrid\Console\ActivateCommand</item>
+                <item name="mageos_opensearch_hybrid_rollback" xsi:type="object">MageOS\OpenSearchHybrid\Console\RollbackCommand</item>
+                <item name="mageos_opensearch_hybrid_reconcile" xsi:type="object">MageOS\OpenSearchHybrid\Console\ReconcileCommand</item>
+                <item name="mageos_opensearch_hybrid_retry" xsi:type="object">MageOS\OpenSearchHybrid\Console\RetryCommand</item>
+                <item name="mageos_opensearch_hybrid_encoder_identity" xsi:type="object">MageOS\OpenSearchHybrid\Console\EncoderIdentityCommand</item>
+                <item name="mageos_opensearch_hybrid_cleanup" xsi:type="object">MageOS\OpenSearchHybrid\Console\CleanupCommand</item>
+                <item name="mageos_opensearch_hybrid_metrics" xsi:type="object">MageOS\OpenSearchHybrid\Console\MetricsCommand</item>
+            </argument>
+        </arguments>
+    </type>
+</config>

@@ -1,0 +1,42 @@
+schema_version = 2
+profile_id = "opensearch-local-8cpu-16g"
+requires_live_verification = true
+cpu_limit = 8
+memory_limit_bytes = 17179869184
+compose_project = "opensearch-hybrid-os38"
+compose_service = "opensearch"
+compose_files = ["docker-compose.yml", "compose.bench.yml"]
+container_image = "opensearchproject/opensearch:3.8.0"
+container_image_id = "sha256:bcc1797519726ceb6d651d4a3e60b7c30da91793914a8dfe75fd441d4f641509"
+opensearch_url = "http://127.0.0.1:9201"
+opensearch_version = "3.8.0"
+plugin_version = "3.8.0.0"
+plugin_components = [
+  "opensearch-alerting",
+  "opensearch-anomaly-detection",
+  "opensearch-asynchronous-search",
+  "opensearch-cross-cluster-replication",
+  "opensearch-custom-codecs",
+  "opensearch-flow-framework",
+  "opensearch-geospatial",
+  "opensearch-index-management",
+  "opensearch-job-scheduler",
+  "opensearch-knn",
+  "opensearch-ltr",
+  "opensearch-ml",
+  "opensearch-neural-search",
+  "opensearch-notifications",
+  "opensearch-notifications-core",
+  "opensearch-observability",
+  "opensearch-performance-analyzer",
+  "opensearch-reports-scheduler",
+  "opensearch-search-relevance",
+  "opensearch-security",
+  "opensearch-security-analytics",
+  "opensearch-skills",
+  "opensearch-sql",
+  "opensearch-system-templates",
+  "opensearch-ubi",
+  "query-insights",
+]
+latency_required_architecture = "x86_64"

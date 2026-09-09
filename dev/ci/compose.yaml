@@ -1,0 +1,69 @@
+name: mageos-opensearch-hybrid-ci
+
+services:
+  mysql:
+    image: mysql:8.4@sha256:b3b90af2a6552ae30c266fdb7d5dd55f3afb72404bb78d37fe8a23eb857fd3fb
+    command: ["--log-bin-trust-function-creators=1"]
+    environment:
+      MYSQL_DATABASE: mageos_hybrid_ci
+      MYSQL_PASSWORD: mageos_ci_only
+      MYSQL_ROOT_PASSWORD: mageos_root_ci_only
+      MYSQL_USER: mageos
+    ports:
+      - "127.0.0.1:13306:3306"
+    tmpfs:
+      - /var/lib/mysql:size=${MAGEOS_CI_MYSQL_TMPFS_SIZE:-1g}
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping --host=127.0.0.1 --user=root --password=$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 60
+      start_period: 20s
+    restart: "no"
+
+  rabbitmq:
+    image: rabbitmq:4.1-management@sha256:72914305cde66172bd85bc7cbede1edbbd16e5f1076af8b0d9afd3727c1e7980
+    environment:
+      RABBITMQ_DEFAULT_PASS: mageos_ci_only
+      RABBITMQ_DEFAULT_USER: mageos
+      RABBITMQ_DEFAULT_VHOST: mageos_hybrid_ci
+    ports:
+      - "127.0.0.1:35672:5672"
+    tmpfs:
+      - /var/lib/rabbitmq:size=${MAGEOS_CI_RABBITMQ_TMPFS_SIZE:-256m}
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 60
+      start_period: 15s
+    restart: "no"
+
+  opensearch:
+    image: opensearchproject/opensearch:3.8.0@sha256:bcc1797519726ceb6d651d4a3e60b7c30da91793914a8dfe75fd441d4f641509
+    environment:
+      DISABLE_INSTALL_DEMO_CONFIG: "true"
+      DISABLE_SECURITY_PLUGIN: "true"
+      OPENSEARCH_JAVA_OPTS: "${MAGEOS_CI_OPENSEARCH_JAVA_OPTS:--Xms512m -Xmx512m}"
+      bootstrap.memory_lock: "true"
+      discovery.type: single-node
+    ports:
+      - "127.0.0.1:19201:9200"
+    tmpfs:
+      - /usr/share/opensearch/data:size=${MAGEOS_CI_OPENSEARCH_TMPFS_SIZE:-1g},uid=1000,gid=1000
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+      nofile:
+        soft: 65536
+        hard: 65536
+    healthcheck:
+      test:
+        - CMD-SHELL
+        - curl --fail --silent 'http://127.0.0.1:9200/_cluster/health?wait_for_status=yellow&timeout=5s' >/dev/null
+      interval: 5s
+      timeout: 6s
+      retries: 60
+      start_period: 30s
+    restart: "no"

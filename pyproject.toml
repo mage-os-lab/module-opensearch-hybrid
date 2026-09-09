@@ -1,0 +1,60 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "opensearch-hybrid"
+version = "0.1.0"
+description = "Evidence-first OpenSearch hybrid product-search benchmark for Mage-OS"
+readme = "README.md"
+license = "OSL-3.0"
+license-files = ["LICENSE.txt"]
+requires-python = ">=3.13"
+dependencies = [
+  "httpx>=0.28.1,<0.29",
+  "numpy>=2.2,<3",
+]
+
+[project.optional-dependencies]
+models = [
+  "onnxruntime>=1.21,<2",
+  "sentence-transformers[onnx]>=5,<6",
+]
+evaluation = [
+  "pytrec-eval-terrier>=0.5.7,<0.6",
+  "ranx>=0.3.20,<0.4",
+]
+
+[dependency-groups]
+dev = [
+  "mypy>=1.15,<2",
+  "pytest>=8.3,<9",
+  "PyYAML>=6.0.2,<7",
+  "types-PyYAML>=6.0.12,<7",
+  "ruff>=0.11,<0.12",
+]
+
+[project.scripts]
+opensearch-hybrid-smoke = "poc.smoke:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["poc"]
+
+[tool.pytest.ini_options]
+addopts = "-ra"
+testpaths = ["tests"]
+markers = [
+  "integration: requires an explicitly selected local service fixture",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM", "RUF"]
+
+[tool.mypy]
+python_version = "3.13"
+strict = true
+files = ["poc", "scripts", "tests"]
